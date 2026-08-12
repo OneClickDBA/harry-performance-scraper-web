@@ -9,6 +9,20 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+### 0.2.0, 2026-08-12
+
+- Replace the unbounded `oracle_latest_scrape_status` view with a small
+  transactionally maintained current-state table keyed by database and
+  collector. Backfill it during upgrades and use it for Grafana dashboards,
+  alert evaluation, and SQL Exporter reads without scanning retained history.
+- Stop the DAH Average Active Sessions panel from drawing lines across periods
+  with no activity samples, so idle or unavailable intervals remain visible as
+  gaps instead of misleading interpolation.
+- Serialize and pace godror physical OCI connection creation across all Oracle
+  pools. This prevents synchronized pool expiration or reconnect attempts from
+  entering `dpiConn_create` concurrently and aborting the process with native
+  heap-corruption errors; established connections and queries remain
+  concurrent.
 - Add default-enabled active/standby operation using PostgreSQL advisory-lock
   leader election with human-readable scopes, writable-primary validation,
   multi-host connection support, and distinct `/healthz` and `/readyz`

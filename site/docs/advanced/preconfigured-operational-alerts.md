@@ -40,7 +40,7 @@ command when Grafana 9 must remain supported.
 
 ## Oracle Scraper Data Is Stale
 
-This alert reads the latest `connectivity` row from
+This alert reads the latest `connectivity` row from the current-state table
 `oracle_latest_scrape_status` and measures its age. It detects a scraper that
 has stopped writing even when the last recorded collection was successful.
 Complete absence of connectivity rows and PostgreSQL query errors are also

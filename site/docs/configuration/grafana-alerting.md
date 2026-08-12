@@ -71,8 +71,10 @@ depend exclusively on this scraper's PostgreSQL database or Grafana instance.
 
 The native `oracle_scrape_status` table complements that external check. It
 records connectivity and collector success, duration, row count, and errors.
-The `oracle_latest_scrape_status` view lets Grafana detect stale or failed
-collection while Grafana and PostgreSQL remain operational.
+The `oracle_latest_scrape_status` current-state table lets Grafana detect stale
+or failed collection while Grafana and PostgreSQL remain operational. Harry
+updates it transactionally with the partitioned `oracle_scrape_status` history,
+so alert evaluation does not scan retained status partitions.
 
 The Oracle Alerting Overview dashboard has the same dependency. It is an
 operator console, not an independent availability monitor: it cannot render or

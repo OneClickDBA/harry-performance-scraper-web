@@ -143,7 +143,8 @@ operational:
 
 One domain failing does not discard rows returned by other domains. Every
 domain writes success, duration, sample count, and a bounded error message to
-`oracle_scrape_status`.
+the partitioned `oracle_scrape_status` history and transactionally updates its
+row in `oracle_latest_scrape_status`.
 
 ## Native Performance Configuration
 

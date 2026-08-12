@@ -118,12 +118,15 @@ than JSON labels in `oracle_metric_samples`:
 | `oracle_wait_class_samples` | Cumulative wait-class time and reset-aware interval deltas |
 | `oracle_system_metric_samples` | Selected bounded `GV$CON_SYSMETRIC` values |
 | `oracle_scrape_status` | Connectivity and collector success, duration, row count, and errors |
+| `oracle_latest_scrape_status` | Current result per database and collector, maintained transactionally for dashboards and alerts |
 
 The scraper keeps in-memory baselines for cumulative counters. The first sample
 after startup has no delta. A lower subsequent value is marked as a counter
 reset instead of producing a negative rate.
 
-Views including `oracle_latest_scrape_status`,
+Current-state rows for databases removed from the configuration expire with
+the global PostgreSQL retention period. The `oracle_latest_scrape_status`
+current-state table and views including
 `oracle_latest_tablespace_samples`, `oracle_system_counter_rates`, and
 `oracle_wait_class_rates` provide stable inputs for dashboards and alerts.
 

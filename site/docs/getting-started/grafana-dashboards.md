@@ -82,6 +82,7 @@ oracle_asm_diskgroup_samples
 oracle_system_counter_samples
 oracle_wait_class_samples
 oracle_scrape_status
+oracle_latest_scrape_status
 ```
 
 The dashboard uses native typed operational data. It does not query
@@ -280,6 +281,7 @@ The dashboards assume the scraper is writing these tables:
 - `oracle_system_counter_samples`
 - `oracle_wait_class_samples`
 - `oracle_scrape_status`
+- `oracle_latest_scrape_status`
 
 If a dashboard is empty, verify:
 
