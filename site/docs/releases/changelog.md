@@ -9,7 +9,7 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
-### 0.2.0, 2026-08-12
+### 0.2.1, 2026-08-13
 
 - Replace the unbounded `oracle_latest_scrape_status` view with a small
   transactionally maintained current-state table keyed by database and
