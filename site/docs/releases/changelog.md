@@ -9,6 +9,10 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+- Consolidate identical ASM diskgroup capacity observations across databases
+  in the global Alerting Overview dashboard and provisioned Grafana alert, so
+  databases sharing ASM do not produce duplicate rows or duplicate alerts.
+
 ### 0.2.1, 2026-08-13
 
 - Replace the unbounded `oracle_latest_scrape_status` view with a small
