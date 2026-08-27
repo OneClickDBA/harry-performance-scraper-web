@@ -22,6 +22,111 @@ docker-compose/grafana/dashboards/
 
 ## Included Dashboards
 
+### Harry PostgreSQL Repository Health
+
+File:
+
+```text
+docker-compose/grafana/dashboards/harry-postgresql-repository-health.json
+```
+
+Purpose:
+
+- Total repository size, estimated Harry row count, retained partitions, and
+  oldest retained partition.
+- Partition-aware storage and row estimates by Harry dataset and day.
+- Estimated storage and rows attributed to each source Oracle database.
+- Current collector freshness, result counts, and collection errors.
+- PostgreSQL cache efficiency, workload counters, table maintenance, dead rows,
+  sessions, long-running queries, and lock waits.
+- Current Grafana repository sessions and optional historical ranking of reads
+  against Harry tables.
+
+Per-database storage and row values are estimates based on PostgreSQL `ANALYZE`
+statistics for each partition. They avoid scanning the retained dataset, but
+they are not exact accounting values. Keep automatic analyze enabled and treat
+the figures as capacity and collection-trend signals.
+
+Historical query rankings require `pg_stat_statements` to be installed and
+listed in `shared_preload_libraries`. The rest of the dashboard works without
+the extension, and the **Query History** panel reports whether it is available.
+`pg_stat_statements` does not retain `application_name`; use a dedicated Grafana
+PostgreSQL role when historical Grafana-only attribution is required. Current
+Grafana sessions are identified from `pg_stat_activity`.
+
+PostgreSQL core statistics do not expose host CPU consumption. Use the
+platform's host-monitoring integration when CPU, memory, filesystem latency, or
+other operating-system measurements are required.
+
+#### Hot-standby recovery conflicts
+
+The **Harry Collector Freshness and Results** and **Latest Samples by
+Collector** panels read `oracle_latest_scrape_status`. Harry continuously
+upserts this small current-state table. On a PostgreSQL hot standby, WAL replay
+of updates and cleanup from the primary can conflict with a standby query and
+cancel it with:
+
+```text
+ERROR: canceling statement due to conflict with recovery (SQLSTATE 40001)
+```
+
+This is normal PostgreSQL hot-standby conflict handling, not an invalid
+dashboard query. The two panels are therefore placed in the collapsed **Latest
+Collector State** section at the bottom of the dashboard. Grafana does not run
+their queries until the section is expanded.
+
+Harry does not change PostgreSQL recovery settings automatically. The correct
+tradeoff is deployment-specific: preventing cleanup conflicts can increase
+dead-row retention and primary bloat, while allowing queries to delay recovery
+can increase standby replay lag. A monitoring product should not silently
+choose either behavior for the PostgreSQL cluster.
+
+Inspect the affected standby before changing its configuration:
+
+```sql
+SELECT
+    pg_is_in_recovery(),
+    pg_last_xact_replay_timestamp(),
+    now() - pg_last_xact_replay_timestamp() AS replay_delay;
+
+SELECT *
+FROM pg_stat_database_conflicts
+WHERE datname = current_database();
+
+SHOW hot_standby_feedback;
+SHOW max_standby_streaming_delay;
+SHOW max_standby_archive_delay;
+SHOW log_recovery_conflict_waits;
+```
+
+Possible operator-controlled solutions are:
+
+- Leave the section collapsed and expand it only when current collector detail
+  is required.
+- Connect Grafana to the writable PostgreSQL primary, or use a separate primary
+  datasource for dashboards that require mutable current-state tables.
+- Enable standby feedback in the standby's `postgresql.conf` to prevent vacuum
+  cleanup conflicts. Monitor dead tuples and table bloat on the primary.
+- Increase the applicable standby delay in the standby's `postgresql.conf` so
+  conflicting reads have longer to finish. Monitor replay lag and do not use an
+  unlimited delay for an HA standby without accepting that consequence.
+
+Example native PostgreSQL settings for a read-oriented standby are:
+
+```conf
+# On the standby only. Values are examples, not Harry requirements.
+hot_standby_feedback = on
+max_standby_streaming_delay = '60s'
+max_standby_archive_delay = '60s'
+log_recovery_conflict_waits = on
+```
+
+`max_standby_streaming_delay` applies to streaming WAL; the archive setting
+applies while replaying archived WAL. Reload or restart PostgreSQL as required
+by the setting and the local configuration-management system. See PostgreSQL's
+[hot-standby conflict handling](https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT)
+and [replication settings](https://www.postgresql.org/docs/current/runtime-config-replication.html#RUNTIME-CONFIG-REPLICATION-STANDBY).
+
 ### Oracle Alerting Overview
 
 File:
