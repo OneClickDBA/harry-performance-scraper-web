@@ -266,18 +266,45 @@ Purpose:
 
 - Total repository size, estimated Harry row count, retained partitions, and
   oldest retained partition.
-- Partition-aware storage and row estimates by Harry dataset and day.
-- Estimated storage and rows attributed to each source Oracle database.
+- Partition-aware storage by Harry dataset and day.
+- Exact daily ingest counts by source Oracle database and dataset, plus
+  estimated physical storage attribution by source database.
+- Ingestion continuity, change against a seven-day baseline, and projected
+  30-day repository storage.
 - Current collector freshness, result counts, and collection errors.
 - PostgreSQL cache efficiency, workload counters, table maintenance, dead rows,
   sessions, long-running queries, and lock waits.
 - Current Grafana repository sessions and optional historical ranking of reads
   against Harry tables.
 
-Per-database storage and row values are estimates based on PostgreSQL `ANALYZE`
-statistics for each partition. They avoid scanning the retained dataset, but
-they are not exact accounting values. Keep automatic analyze enabled and treat
-the figures as capacity and collection-trend signals.
+Harry records successful PostgreSQL writes in the partitioned
+`harry_repository_daily_ingest` table. It keeps one row per UTC day and source
+database, with separate counters for each native dataset. These counters make
+the per-database and per-dataset row panels exact without scanning retained
+sample partitions or depending on PostgreSQL planner statistics.
+
+Accounting is buffered and normally flushed every five minutes. A graceful
+shutdown or HA leadership loss forces a final flush; an abrupt process or host
+failure can lose up to five minutes of accounting, but does not lose the sample
+rows already committed. Accounting begins after the version containing this
+feature is deployed and is not backfilled for older retained data.
+
+`sql_text_writes` and `sql_plan_operation_writes` count successful write
+operations against their deduplicated dictionaries. They are not the number of
+currently distinct dictionary rows. Physical storage by source database
+remains an estimate: Harry distributes each partition's measured heap and
+index bytes according to its exact per-database row shares, but PostgreSQL
+pages and indexes are shared within that partition.
+
+When Grafana uses a role that was granted access before this table existed,
+grant access to the new table after Harry creates it:
+
+```sql
+GRANT SELECT ON harry_repository_daily_ingest TO grafana;
+```
+
+For future Harry tables, a database owner can instead configure suitable
+default privileges for the role that runs schema migration.
 
 Historical query rankings require `pg_stat_statements` to be installed and
 listed in `shared_preload_libraries`. The rest of the dashboard works without
@@ -387,6 +414,7 @@ The dashboards assume the scraper is writing these tables:
 - `oracle_wait_class_samples`
 - `oracle_scrape_status`
 - `oracle_latest_scrape_status`
+- `harry_repository_daily_ingest`
 
 If a dashboard is empty, verify:
 

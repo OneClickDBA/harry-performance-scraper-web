@@ -10,12 +10,17 @@ List of upcoming and historic changes to the scraper.
 ### Next, TBD
 
 - Add a Grafana-only Harry PostgreSQL Repository Health dashboard covering
-  partition-aware storage, per-source-database row and storage estimates,
-  collector freshness, PostgreSQL workload and maintenance, sessions, locks,
-  current Grafana activity, and optional `pg_stat_statements` query history.
-  Keep the high-churn latest-collector panels in a collapsed bottom section and
-  document PostgreSQL hot-standby recovery conflicts and operator-controlled
-  mitigation tradeoffs.
+  partition-aware storage, collector freshness, PostgreSQL workload and
+  maintenance, sessions, locks, current Grafana activity, and optional
+  `pg_stat_statements` query history. Keep the high-churn latest-collector
+  panels in a collapsed bottom section and document PostgreSQL hot-standby
+  recovery conflicts and operator-controlled mitigation tradeoffs.
+- Add partitioned native repository-ingestion accounting with exact daily
+  per-source and per-dataset write counters, five-minute buffered updates, and
+  forced graceful-shutdown flushing. Use it for storage attribution, ingestion
+  continuity, seven-day change detection, and 30-day storage projection panels.
+  Provision alerts for stale accounting, sharp SQL-ingestion drops, and sharp
+  repository-ingestion growth.
 - Consolidate identical ASM diskgroup capacity observations across databases
   in the global Alerting Overview dashboard and provisioned Grafana alert, so
   databases sharing ASM do not produce duplicate rows or duplicate alerts.

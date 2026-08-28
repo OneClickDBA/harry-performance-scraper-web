@@ -80,11 +80,13 @@ The scraper writes to these primary PostgreSQL tables:
 - `oracle_system_metric_samples`
 - `oracle_scrape_status`
 - `oracle_latest_scrape_status`
+- `harry_repository_daily_ingest`
 
 When `output.postgresql.autoMigrate: true` is configured, the scraper creates
 the parent partitioned tables, the SQL text and execution-plan lookup tables,
-the latest collector-status table, and indexes automatically. Daily child
-partitions are created just before data is written.
+the latest collector-status table, repository-ingestion accounting, and
+indexes automatically. Daily child partitions are created just before data is
+written.
 
 ## Supported Oracle Versions
 

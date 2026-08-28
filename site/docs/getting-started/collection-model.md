@@ -130,6 +130,33 @@ current-state table and views including
 `oracle_latest_tablespace_samples`, `oracle_system_counter_rates`, and
 `oracle_wait_class_rates` provide stable inputs for dashboards and alerts.
 
+## Repository Ingestion Accounting
+
+`harry_repository_daily_ingest` records Harry's successful PostgreSQL writes
+with one row per source database and UTC day. Typed counters distinguish SQL,
+session, activity, operational, additional-metric, collector-status, SQL-text,
+and execution-plan writes. Timestamp columns record the first and latest sample
+represented by each daily row and the most recent accounting flush.
+
+Harry updates these counters in a separate transaction after sample data has
+committed. Updates are buffered for five minutes to avoid adding one accounting
+write to every scrape transaction. A failed accounting flush is retained in
+memory and retried without reporting the already committed sample transaction
+as failed. Graceful shutdown and HA leadership loss force a final flush; an
+abrupt process or host failure can lose at most the buffered accounting window.
+
+The accounting table uses the same daily partition creation and global
+retention policy as native sample tables. It supports exact row-ingestion
+trends, collector continuity checks, change detection, capacity projection,
+and estimated physical-storage attribution without scanning high-volume fact
+tables. Existing retained rows are not backfilled when the feature is first
+deployed.
+
+SQL text and plan counters represent successful write operations against
+deduplicated lookup tables, not current distinct row counts. Physical bytes by
+source database remain estimated because multiple databases share heap and
+index pages inside each daily dataset partition.
+
 ## Additional Metrics
 
 Additional metrics are optional SQL-derived measurements loaded from TOML or

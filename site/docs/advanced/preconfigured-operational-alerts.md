@@ -11,8 +11,10 @@ The scraper repository supplies Grafana-managed alert rules in:
 docker-compose/grafana/alerting/oracle-operational-alerts.yaml
 ```
 
-The rules evaluate PostgreSQL views created by the scraper. They run once per
-minute in the `Oracle operational alerts` group and create one alert instance
+The rules evaluate PostgreSQL tables and views created by the scraper. Oracle
+state rules run once per minute in the `Oracle operational alerts` group.
+Repository-ingestion rules run every five minutes in the
+`Harry repository ingestion alerts` group. A rule creates one alert instance
 for each returned Oracle database, tablespace, resource, or ASM diskgroup.
 
 The supplied thresholds and pending periods are starting values. Review them
@@ -28,6 +30,9 @@ and notification requirements before treating them as production policy.
 | Oracle tablespace usage is high | Tablespace usage is greater than 90% | 5 minutes | Warning |
 | Oracle resource limit usage is high | A finite Oracle resource limit is greater than 85% utilized | 5 minutes | Warning |
 | Oracle ASM diskgroup usage is high | ASM diskgroup usage is greater than 90% | 5 minutes | Warning |
+| Harry repository ingestion accounting is stale | No accounting flush for more than 15 minutes | 5 minutes | Critical |
+| Harry SQL sample ingestion dropped sharply | Previous complete UTC day is below 20% of the prior seven-day average | 15 minutes | Warning |
+| Harry repository ingestion increased sharply | Previous complete UTC day exceeds three times the prior seven-day average | 15 minutes | Warning |
 
 Grafana evaluates thresholds with a strict `greater than` comparison. A value
 equal to the threshold is not yet firing.
@@ -139,6 +144,63 @@ where used_percent > 90
 order by used_percent desc;
 ```
 
+## Harry Repository Ingestion Accounting Is Stale
+
+Harry buffers native ingest counters and normally flushes them to
+`harry_repository_daily_ingest` every five minutes. This alert fires when a
+configured database has no successful accounting flush for more than 15
+minutes. A database with no accounting row is also considered stale.
+
+Start with:
+
+```sql
+select
+    source_database,
+    max(last_flushed_at) as last_flushed_at,
+    now() - max(last_flushed_at) as accounting_age
+from harry_repository_daily_ingest
+group by source_database
+order by last_flushed_at;
+```
+
+Confirm which Harry instance owns the HA advisory lock, then inspect its logs,
+PostgreSQL connectivity, transaction failures, and the
+**Repository Ingestion Continuity** panel. This alert complements collector
+status: samples can be committed while a separate accounting flush is being
+retried. An abrupt failure can lose up to five minutes of buffered accounting;
+a persistent age beyond 15 minutes is not normal.
+
+## Harry SQL Sample Ingestion Dropped Sharply
+
+This rule compares the previous complete UTC day's `sql_sample_rows` with the
+average of the preceding seven complete days. It fires below 20% of that
+baseline, and only after at least four baseline days exist with an average of
+at least 1,000 SQL rows per day.
+
+Review the **Ingestion Change vs 7-Day Baseline** panel, SQL collector errors,
+Oracle privileges, connectivity, configured intervals, and whether the source
+database was deliberately idle or unavailable. Weekends, maintenance windows,
+batch schedules, and workload migrations can cause legitimate changes. Tune or
+disable this starter rule where the workload is not comparable by weekday.
+
+## Harry Repository Ingestion Increased Sharply
+
+This rule compares all recorded repository writes for the previous complete
+UTC day with the preceding seven-day average. It fires above three times the
+baseline, and only after at least four baseline days exist with an average of
+at least 10,000 rows per day.
+
+Use **Daily Recorded Rows by Dataset** to identify the dataset responsible,
+then review scrape intervals, newly enabled collectors, added databases, and
+actual Oracle workload changes. Check **Projected 30-Day Ingest Storage** and
+retention capacity before accepting sustained growth. Like the SQL drop rule,
+this is a trend signal rather than proof of a scraper fault.
+
+The two baseline alerts use complete UTC days. They do not compare partial
+current-day data with complete historical days. Accounting is not backfilled
+when upgrading, so these rules remain quiet until enough post-upgrade history
+has accumulated.
+
 ## Evaluation Errors And No Data
 
 All supplied rules use `execErrState: Alerting`. A firing rule can therefore
@@ -152,6 +214,7 @@ Verify:
 - alert query models use `type: postgres`; this is the native Grafana 9 plugin
   ID and a supported PostgreSQL plugin alias in Grafana 12 and 13;
 - the datasource account can select the scraper tables and views;
+- the datasource account can select `harry_repository_daily_ingest`;
 - PostgreSQL and Grafana can reach each other;
 - schema auto-migration created the required latest-state views;
 - the alerting provisioning file loaded without errors.

@@ -9,8 +9,9 @@ Grafana can evaluate alert rules directly against the scraper's PostgreSQL
 tables and views. Prometheus is not required for Oracle operational alerts.
 
 The project supplies starter rules for stale scraper data, failed Oracle
-connectivity, tablespace utilization, finite Oracle resource limits, and ASM
-diskgroup utilization. The Docker Compose stack provisions them from:
+connectivity, tablespace utilization, finite Oracle resource limits, ASM
+diskgroup utilization, stale repository accounting, and significant daily
+ingestion changes. The Docker Compose stack provisions them from:
 
 ```text
 docker-compose/grafana/alerting/oracle-operational-alerts.yaml
@@ -92,8 +93,16 @@ rules. The supplied rules query all configured databases and return
 `source_database` as an alert label.
 
 Use a dedicated PostgreSQL account with `SELECT` access to the scraper schema
-for the Grafana datasource. Do not give the Grafana datasource account schema
-ownership or write privileges.
+for the Grafana datasource. The repository-ingestion rules specifically require
+access to `harry_repository_daily_ingest`:
+
+```sql
+GRANT SELECT ON harry_repository_daily_ingest TO grafana;
+```
+
+Do not give the Grafana datasource account schema ownership or write
+privileges. Configure PostgreSQL default privileges when future tables should
+be readable automatically by the same role.
 
 ## No-Data And Error Behavior
 
