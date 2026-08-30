@@ -15,10 +15,9 @@ const config: Config = {
     v4 : true, // Improve compatibility with the upcoming Docusaurus v4
   },
 
-  url : 'https://oneclickdba.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl : '/harry-performance-scraper-web/',
+  url : 'https://harryperformance.com',
+  // The custom GitHub Pages domain serves this site from its root path.
+  baseUrl : '/',
 
   clientModules : [ './matomo.js' ],
 
