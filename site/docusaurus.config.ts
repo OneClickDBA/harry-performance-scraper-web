@@ -154,7 +154,6 @@ const config: Config = {
               label : 'Professional support',
               href : 'https://www.oneclickdba.com/harry/',
             },
-            {label : 'dodger-one CV', to : 'https://cv.ciberterminal.net'},
             {
               label : 'GitHub',
               href : 'https://github.com/OneClickDBA/harry-performance-scraper',
