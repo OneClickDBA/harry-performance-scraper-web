@@ -59,6 +59,7 @@
 
 .primaryAction,
 .secondaryAction,
+.demoAction,
 .ctaButton,
 .ctaLink {
   display: inline-flex;
@@ -70,6 +71,19 @@
   border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.demoAction {
+  border: 1px solid #f2c45e;
+  background: #f2c45e;
+  color: #2a1600;
+}
+
+.demoAction:hover {
+  border-color: #ffd778;
+  background: #ffd778;
+  color: #2a1600;
   text-decoration: none;
 }
 
@@ -375,6 +389,22 @@
   border-radius: 7px;
   background: #171a1f;
   box-shadow: 0 12px 28px rgba(22, 28, 34, 0.16);
+}
+
+.dashboardPreviewLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboardPreviewLink:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboardPreviewLink:hover .dashboardPreview {
+  border-color: #8f1111;
+  box-shadow: 0 14px 32px rgba(22, 28, 34, 0.24);
 }
 
 .dashboardPreview img {

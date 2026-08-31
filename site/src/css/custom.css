@@ -50,11 +50,24 @@
 }
 
 .navbar-github-button,
-.navbar-docs-button {
+.navbar-docs-button,
+.navbar-demo-button {
   min-height: 38px;
   margin-left: 0.5rem;
   padding: 0.5rem 0.9rem;
   border-radius: 6px;
+}
+
+.navbar-demo-button {
+  border: 1px solid #f2c45e;
+  background: #f2c45e;
+  color: #2a1600;
+}
+
+.navbar-demo-button:hover {
+  border-color: #ffd778;
+  background: #ffd778;
+  color: #2a1600;
 }
 
 .navbar-github-button {
@@ -104,7 +117,8 @@
   }
 
   .navbar-sidebar .navbar-github-button,
-  .navbar-sidebar .navbar-docs-button {
+  .navbar-sidebar .navbar-docs-button,
+  .navbar-sidebar .navbar-demo-button {
     margin: 0;
     border: 0;
     background: transparent;

@@ -102,6 +102,12 @@ const config: Config = {
           label : 'Use Cases',
         },
         {
+          href : 'https://demo.harryperformance.com',
+          label : 'Live Demo',
+          position : 'right',
+          className : 'navbar-demo-button',
+        },
+        {
           href : 'https://github.com/OneClickDBA/harry-performance-scraper',
           label : 'GitHub',
           position : 'right',
@@ -121,6 +127,10 @@ const config: Config = {
         {
           title : 'Docs',
           items : [
+            {
+              label : 'Live Demo',
+              href : 'https://demo.harryperformance.com',
+            },
             {
               label : 'Tutorial',
               to : '/docs/intro',

@@ -7,6 +7,13 @@ sidebar_position: 1
 Performance Scraper for Oracle Database collects performance data on a
 schedule and stores it in PostgreSQL for Grafana dashboards and troubleshooting.
 
+:::tip Live Demo
+Explore Harry's dashboards using the public, interactive
+[Grafana demo](https://demo.harryperformance.com). No account is required.
+See [Live Demo](./getting-started/live-demo.md) for the available dashboards
+and usage notes.
+:::
+
 :::warning
 Oracle Diagnostics Pack  
 The Oracle ASH collector is **DISABLED by default**.   

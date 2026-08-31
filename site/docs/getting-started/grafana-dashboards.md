@@ -8,6 +8,12 @@ sidebar_position: 4
 Grafana reads the PostgreSQL storage database directly. Configure a PostgreSQL
 datasource that points at the same database used by the scraper.
 
+:::tip Explore the dashboards
+Open the public [Harry live demo](https://demo.harryperformance.com) to use the
+included dashboards with a running dataset before installing them. No account
+is required.
+:::
+
 The Docker Compose test stack provisions the datasource automatically from:
 
 ```text

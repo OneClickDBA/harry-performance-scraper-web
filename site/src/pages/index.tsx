@@ -4,7 +4,7 @@ import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
-import {ArrowRight, BookOpen, Check, Code2} from 'lucide-react';
+import {ArrowRight, BookOpen, Check, Code2, MonitorPlay} from 'lucide-react';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 
 import styles from './index.module.css';
@@ -45,6 +45,14 @@ function HomepageHeader() {
             then visualize with Grafana or query directly with SQL.
           </p>
           <div className={styles.heroActions}>
+            <a
+              className={styles.demoAction}
+              href="https://demo.harryperformance.com"
+              target="_blank"
+              rel="noopener noreferrer">
+              <MonitorPlay size={18} aria-hidden="true" />
+              Explore the live demo
+            </a>
             <a
               className={styles.secondaryAction}
               href="https://github.com/OneClickDBA/harry-performance-scraper"
@@ -164,13 +172,20 @@ function ArchitectureDiagram() {
             </div>
           </div>
 
-          <figure className={styles.dashboardPreview}>
-            <img
-              src={dashboard}
-              alt="Grafana Database Activity History dashboard powered by scraper data"
-            />
-            <figcaption>Database activity, SQL and wait analysis in Grafana</figcaption>
-          </figure>
+          <a
+            className={styles.dashboardPreviewLink}
+            href="https://demo.harryperformance.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open the Harry live Grafana demo">
+            <figure className={styles.dashboardPreview}>
+              <img
+                src={dashboard}
+                alt="Grafana Database Activity History dashboard powered by scraper data"
+              />
+              <figcaption>Open the live Grafana demo</figcaption>
+            </figure>
+          </a>
         </div>
       </div>
     </section>
