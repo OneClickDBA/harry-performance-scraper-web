@@ -151,8 +151,8 @@ const config: Config = {
           title : 'More',
           items : [
             {
-              label : 'OneClickDBA',
-              to : 'https://oneclickdba.com/harry/',
+              label : 'Professional support',
+              href : 'https://www.oneclickdba.com/harry/',
             },
             {label : 'dodger-one CV', to : 'https://cv.ciberterminal.net'},
             {

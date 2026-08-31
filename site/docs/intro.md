@@ -7,19 +7,6 @@ sidebar_position: 1
 Performance Scraper for Oracle Database collects performance data on a
 schedule and stores it in PostgreSQL for Grafana dashboards and troubleshooting.
 
-:::tip Live Demo
-Explore Harry's dashboards using the public, interactive
-[Grafana demo](https://demo.harryperformance.com). No account is required.
-See [Live Demo](./getting-started/live-demo.md) for the available dashboards
-and usage notes.
-:::
-
-:::warning
-Oracle Diagnostics Pack  
-The Oracle ASH collector is **DISABLED by default**.   
-Enabling it requires that **YOU verify your Oracle Diagnostics Pack licensing**.
-:::
-
 This is not a Prometheus exporter. It does not expose Oracle metrics on `/metrics`. Instead, it:
 
 - connects to one or more Oracle databases,
@@ -66,6 +53,20 @@ queried by SQL-backed Grafana dashboards.
 - Builds with either `godror` and Oracle Instant Client, or the no-CGO `go-ora`
   driver using `-tags goora`.
 
+:::warning
+Oracle Diagnostics Pack  
+The Oracle ASH collector is **DISABLED by default**.   
+Enabling it requires that **YOU verify your Oracle Diagnostics Pack licensing**.
+:::
+
+
+### Live Demo
+
+Explore Harry's dashboards using the public, interactive
+[Grafana demo](https://demo.harryperformance.com). No account is required.  
+See [Live Demo](./getting-started/live-demo.md) for the available dashboards
+and usage notes.
+
 ## PostgreSQL Tables
 
 The scraper writes to these primary PostgreSQL tables:
@@ -103,8 +104,7 @@ the operator explicitly configures `performance.activity.source: ash`.
 
 ## Origins and acknowledgements
 
-Harry is developed by [Jorge Holgado](mailto:dodger@oneclickdba.com) and
-commercially supported under the OneClickDBA brand.
+Harry is developed by [Jorge Holgado](mailto:dodger@oneclickdba.com).
 
 Harry originated as a fork of Oracle's database application observability
 project, which incorporated earlier work from Seth Miller's Oracle DB
@@ -119,3 +119,16 @@ analysis and visualization layer.
 Copyright and licensing information for the original projects and Harry's
 fork-specific development is available in the project's `LICENSE.txt`,
 `LICENSES/`, and `THIRD_PARTY_LICENSES.txt` files.
+
+## Professional support
+
+Harry is open-source and can be evaluated, deployed, and operated independently.
+
+Organizations that want direct assistance can obtain optional commercial
+support from OneClickDBA, with direct involvement from Harry's developer.
+Services include architecture and sizing, proof-of-concept and production
+deployments, configuration validation, upgrades, troubleshooting, dashboard
+customization, and analysis of collected Oracle performance data.
+
+[Explore professional support for Harry](https://www.oneclickdba.com/harry/)
+
