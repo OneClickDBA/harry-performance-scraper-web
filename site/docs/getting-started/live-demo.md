@@ -11,13 +11,15 @@ running Harry deployment. It lets you inspect the product workflow and
 dashboard behaviour without installing Oracle Database, PostgreSQL, Harry, or
 Grafana locally.
 
-<a
-  className="button button--primary button--lg"
-  href="https://demo.harryperformance.com"
-  target="_blank"
-  rel="noopener noreferrer">
-  Open the Harry live demo
-</a>
+<div className="live-demo-cta">
+  <a
+    className="button button--primary button--lg live-demo-cta__button"
+    href="https://demo.harryperformance.com"
+    target="_blank"
+    rel="noopener noreferrer">
+    <span>Open the Harry live demo</span>
+  </a>
+</div>
 
 No account is required.
 
@@ -42,3 +44,13 @@ production sizing baseline.
 
 For dashboard descriptions, required PostgreSQL tables, and installation
 instructions, continue with [Grafana Dashboards](./grafana-dashboards.md).
+
+## Limitations
+
+The demo runs on a resource-constrained virtual machine. Each Oracle Database
+instance is limited to one virtual CPU core, and the remaining components have
+even smaller CPU allocations. As a result, the environment may occasionally
+respond slowly, especially when several people are using it at the same time.
+
+The demo is intended for exploring Harry's features and workflows, not for
+performance testing or benchmarking. Thank you for your understanding.

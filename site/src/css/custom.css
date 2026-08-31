@@ -89,6 +89,20 @@
   margin-left: var(--ifm-navbar-padding-horizontal);
 }
 
+.live-demo-cta {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--ifm-paragraph-margin-bottom);
+}
+
+.live-demo-cta__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 4rem;
+  text-align: center;
+}
+
 .navbar-sidebar {
   background: #350303;
 }
