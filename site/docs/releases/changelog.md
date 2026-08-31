@@ -9,6 +9,13 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+### 0.2.2, 2026-08-31
+
+- Make Oracle troubleshooting tables easier to scan with consistent display
+  labels and compact widths across DAH, SQL Performance, Top Consumers, and
+  Sessions and Blocking. Move SQL plan availability beside the Top Consumers
+  ranking columns and highlight whether plans are available. Standardize the
+  shared Database and instance labels in operational and repository views.
 - Add a Grafana-only Harry PostgreSQL Repository Health dashboard covering
   partition-aware storage, collector freshness, PostgreSQL workload and
   maintenance, sessions, locks, current Grafana activity, and optional
