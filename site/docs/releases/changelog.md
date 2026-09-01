@@ -9,6 +9,11 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+- Add detailed PostgreSQL startup diagnostics around repository connectivity,
+  schema migration, latest scrape-status conversion and backfill, and retention
+  cleanup. Identify repository and HA sessions through distinct default
+  PostgreSQL application names to simplify lock and wait investigation.
+
 ### 0.2.2, 2026-08-31
 
 - Make Oracle troubleshooting tables easier to scan with consistent display

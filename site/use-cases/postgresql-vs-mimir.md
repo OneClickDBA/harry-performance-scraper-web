@@ -29,8 +29,9 @@ Treating every SQL ID, plan operation, session and wait relationship as a
 Prometheus label set creates a cardinality problem very quickly.
 
 This is why **Harry - Performance Scraper for Oracle Database** uses PostgreSQL
-as its complete performance repository and reserves Prometheus/Mimir for the
-smaller set of metrics that naturally belong there.
+as its complete performance repository. Organisations that also use
+Prometheus/Mimir can reserve it for the smaller set of bounded operational
+metrics and alerts that naturally fit a time-series model.
 
 ## The use case
 
@@ -56,20 +57,28 @@ are absent from the 30-day total. The reported result is therefore a **lower
 bound**, not a complete estimate.
 
 The model counts the distinct label sets and scalar metrics needed to retain
-the dimensions Harry currently makes queryable. Current-state SQL text and
-plan rows are assumed to remain exposed at a 15-second scrape interval while
-they are relevant. It does not add deployment labels such as environment,
-region, cluster, job, exporter instance or HA replica, and it does not include
-recording rules.
+the dimensions Harry currently makes queryable. It does not add deployment
+labels such as environment, region, cluster, job, scraper instance or HA
+replica, and it does not include recording rules.
+
+The analysis deliberately does **not** estimate samples per second. That rate
+depends on a Prometheus publication design that does not exist: which entities
+would be emitted on every scrape, how long current-state metadata would remain
+exposed, and how stale SQL and plan series would be retired. Distinct series
+can be measured from the retained data; a reliable ingestion rate cannot.
 
 ## What the measurements showed
 
-| Window | Equivalent Prometheus/Mimir workload |
+| Window | Distinct equivalent Prometheus/Mimir series |
 |---:|---|
-| **2 hours** | 1.05 million series and an average 37,700 samples/s |
-| **24 hours** | 4.54 million retained series and an average 102,600 samples/s |
-| **30 days** | Partial lower bound of 15.09 million retained series; at least 9.79 million continuously exposed series |
-| **60 days** | Growth forecast of at least 30.2 million retained series and approximately 19.6 million continuously exposed series |
+| **2 hours** | Approximately 1.05 million |
+| **24 hours** | Approximately 4.54 million |
+| **30 days** | Partial lower bound of approximately 15.09 million |
+
+These figures represent unique series identities observed within each window.
+They are not concurrent active series, Head series or an ingestion-rate
+estimate. The 30-day value excludes the two scans that exceeded the safety
+timeout, so it must not be treated as a complete total.
 
 The most important result was not simply the total. It was where the
 cardinality came from.
@@ -82,42 +91,24 @@ In other words, infrastructure-style Oracle metrics were not the problem. The
 cardinality came from preserving the exact information that makes deep
 performance investigation possible.
 
-## What would Mimir require?
+## What the measurements do and do not prove
 
-Grafana's official capacity-planning guidance provides the following baseline
-figures:
+The measurements show that preserving Harry's existing troubleshooting
+dimensions as Prometheus metric identities creates substantial cardinality and
+label churn. They do not prove how much CPU, memory or storage a particular
+Mimir deployment would require.
 
-- one distributor CPU core and 1 GB of distributor RAM per 25,000 samples/s;
-- one ingester CPU core, 2.5 GB of ingester RAM and 5 GB of local disk per
-  300,000 in-memory series;
-- in-memory series multiplied by the replication factor for high availability;
-- 50% additional memory and disk capacity for production headroom.
+Sizing Mimir would first require a complete publication design and a controlled
+load test covering scrape cadence, active-series lifetime, staleness, label
+length, recording rules, replication and query patterns. Assigning
+samples-per-second or infrastructure requirements without that design would be
+speculation.
 
-Sources: [Grafana Mimir capacity planning](https://grafana.com/docs/mimir/latest/manage/run-production-environment/planning-capacity/)
-and [Mimir ingest-storage architecture](https://grafana.com/docs/mimir/latest/get-started/about-grafana-mimir-architecture/about-ingest-storage-architecture/).
-
-Applying those published ratios to the measured workload, with three ingester
-zones and Grafana's recommended headroom, gives the following write-path
-capacity model:
-
-| Retention window | Estimated Mimir write path* |
-|---:|---|
-| **2 hours** | Approximately 12 CPU, 42 GB RAM and 79 GB local ingester disk |
-| **24 hours** | Approximately 20 CPU, 66 GB RAM and 120 GB local ingester disk |
-| **30 days** | Lower bound of approximately 124 CPU, 406 GB RAM and 734 GB local ingester disk, plus at least 2.56 TB of logical object-storage capacity |
-| **60 days** | Growth forecast of approximately 248 CPU, 812 GB RAM and 1.47 TB local ingester disk, plus approximately 10.2 TB of logical object-storage capacity |
-
-\*These figures cover only distributors and ingesters. They exclude the
-Kafka-compatible ingest-storage layer, queriers, query-frontends,
-store-gateways, compactors, caches and physical object-storage replication.
-Object-storage figures use the documented two-bytes-per-sample planning
-assumption; actual compression, label length, traffic patterns and deployment
-configuration will change the result.
-
-This is not a generic benchmark claiming that Mimir always requires these
-resources, nor is it a comparison of raw PostgreSQL bytes with Mimir bytes. It
-is a capacity model for translating **this specific Oracle forensic data
-model** into continuously queryable Prometheus series.
+It is also possible to reduce cardinality by dropping labels or retaining only
+aggregated metrics. That can be a good monitoring design, but it no longer
+preserves the SQL-, plan-, session- and execution-level investigation described
+in this use case. The relevant comparison is equivalent troubleshooting
+functionality, not a reduced metric subset presented as the same system.
 
 ## The same workload in Harry
 
@@ -130,13 +121,8 @@ Each node has:
 
 With 30 days of retention, each PostgreSQL node uses approximately 240 GB. CPU
 utilisation on the primary remains below 5%, while the replicas have negligible
-load.
-
-Doubling retention to 60 days produces a simple linear forecast of
-approximately 480 GB per node. Increasing each disk to around 600 GB would
-provide comfortable headroom without changing the architecture or increasing
-CPU and RAM. Actual growth should still be measured because workload and data
-retention are not always linear.
+load. These are observations from this deployment, not universal PostgreSQL
+capacity guarantees.
 
 That is the practical advantage of using a relational repository for
 relational performance data. PostgreSQL stores SQL text once, represents
@@ -173,13 +159,14 @@ not preserve the statement a DBA needs to investigate. See
 Harry does not compete with Prometheus or Mimir for conventional
 infrastructure metrics. It complements them.
 
-The resulting architecture is deliberately simple:
+The resulting architecture can remain deliberately simple:
 
 - **Harry and PostgreSQL/Patroni:** complete Oracle performance history, SQL
-  text, execution plans, session state, blocking and forensic drill-down.
-- **Prometheus/Mimir:** bounded health metrics, alert conditions and fleet-level
-  operational visibility.
-- **Grafana:** one presentation layer across both data sources.
+  text, execution plans, session state, blocking, operational history and
+  forensic drill-down.
+- **Grafana:** dashboards and, where permitted, PostgreSQL-backed alerting.
+- **Optional Prometheus/Mimir integration:** bounded alert metrics for
+  organisations that require an existing Prometheus/Alertmanager path.
 
 Teams can keep their existing Prometheus, Mimir and Grafana investments while
 adding the detailed Oracle visibility that a metrics-only model cannot provide
@@ -201,6 +188,7 @@ blocking sessions or retain detailed Oracle performance history without
 turning every database entity into a metric label, Harry was built for that
 job.
 
-[Explore Harry](https://oneclickdba.com/harry/) or
+[Open the public Harry demo](https://demo.harryperformance.com/),
+[explore Harry](https://oneclickdba.com/harry/) or
 [contact OneClickDBA](https://oneclickdba.com/) to discuss an Oracle
 performance monitoring deployment.
