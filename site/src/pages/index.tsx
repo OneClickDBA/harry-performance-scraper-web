@@ -136,7 +136,7 @@ function ArchitectureDiagram() {
 
             <div className={clsx(styles.systemNode, styles.scraperNode)}>
               <img src={harry} alt="" />
-              <strong>Scraper</strong>
+              <strong>Harry Scraper</strong>
               <small>Scheduled collection</small>
             </div>
 
