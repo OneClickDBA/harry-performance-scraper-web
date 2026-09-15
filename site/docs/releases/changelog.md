@@ -9,6 +9,13 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+- Add partitioned Harry runtime telemetry and current state for activity and
+  scheduled cycles. Record scheduler lag, Oracle collection duration,
+  PostgreSQL repository duration, configured limits, missed intervals,
+  database completion, sample counts, and errors without additional Oracle
+  queries or automatic throttling. Add Operational Overview and Repository
+  Health panels plus Grafana early-warning alerts for query-timeout, cycle,
+  repository-write, and scheduler pressure.
 - Add detailed PostgreSQL startup diagnostics around repository connectivity,
   schema migration, latest scrape-status conversion and backfill, and retention
   cleanup. Identify repository and HA sessions through distinct default

@@ -130,6 +130,42 @@ current-state table and views including
 `oracle_latest_tablespace_samples`, `oracle_system_counter_rates`, and
 `oracle_wait_class_rates` provide stable inputs for dashboards and alerts.
 
+## Runtime Pressure Telemetry
+
+Harry records scheduler and repository timing without issuing any additional
+queries against Oracle Database. The existing `oracle_scrape_status` history
+continues to identify the duration and result of each collector for each Oracle
+database. Two Harry-level tables describe the complete activity and scheduled
+cycles:
+
+| PostgreSQL table | Collected data |
+| --- | --- |
+| `harry_runtime_samples` | Partitioned cycle history: scheduling lag, Oracle collection duration, PostgreSQL repository duration, total duration, missed intervals, completed databases, samples, and errors |
+| `harry_latest_runtime_status` | Latest cycle per HA scope and scheduler, maintained for dashboards and alerts |
+
+`collection_duration_seconds` covers the concurrent Oracle collection phase.
+`postgresql_write_duration_seconds` covers the complete repository phase,
+including pool wait, partition checks, sample and latest-state writes, commit,
+and any ingest-accounting or retention work performed before the scheduler can
+continue. `total_duration_seconds` starts at the planned scheduler time, so it
+also includes scheduling delay.
+
+Runtime records are completed only after the PostgreSQL phase ends. Harry
+buffers them in memory for up to one minute and writes the batch with a normal
+sample transaction, avoiding a separate transaction every two seconds. A
+graceful shutdown flushes the final buffered rows; an abrupt process failure can
+lose up to the buffered minute of runtime telemetry without losing sample rows
+that already committed. After a PostgreSQL write failure, bounded buffered
+runtime records are written when the repository recovers; a complete repository
+outage still requires an independent availability check.
+
+At the default `2s` activity and `15s` scheduled intervals, one active Harry HA
+scope produces approximately 48,960 narrow runtime rows per day regardless of
+the number of monitored Oracle databases. The global retention setting applies
+to `harry_runtime_samples`. Harry observes and reports pressure but does not
+automatically throttle or change collection intervals: incident periods are
+when complete diagnostic data is most valuable.
+
 ## Repository Ingestion Accounting
 
 `harry_repository_daily_ingest` records Harry's successful PostgreSQL writes

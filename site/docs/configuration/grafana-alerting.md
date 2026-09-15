@@ -10,8 +10,9 @@ tables and views. Prometheus is not required for Oracle operational alerts.
 
 The project supplies starter rules for stale scraper data, failed Oracle
 connectivity, tablespace utilization, finite Oracle resource limits, ASM
-diskgroup utilization, stale repository accounting, and significant daily
-ingestion changes. The Docker Compose stack provisions them from:
+diskgroup utilization, runtime pressure, stale repository accounting, and
+significant daily ingestion changes. The Docker Compose stack provisions them
+from:
 
 ```text
 docker-compose/grafana/alerting/oracle-operational-alerts.yaml
@@ -77,6 +78,12 @@ or failed collection while Grafana and PostgreSQL remain operational. Harry
 updates it transactionally with the partitioned `oracle_scrape_status` history,
 so alert evaluation does not scan retained status partitions.
 
+`harry_runtime_samples` and `harry_latest_runtime_status` add early warning for
+activity queries approaching their timeout, complete scheduler cycles
+approaching their interval, PostgreSQL repository work consuming the interval,
+and delayed or missed scheduler ticks. These signals are observability only;
+Harry never changes collection intervals or throttles itself in response.
+
 The Oracle Alerting Overview dashboard has the same dependency. It is an
 operator console, not an independent availability monitor: it cannot render or
 report that Grafana itself is unavailable.
@@ -98,6 +105,8 @@ access to `harry_repository_daily_ingest`:
 
 ```sql
 GRANT SELECT ON harry_repository_daily_ingest TO grafana;
+GRANT SELECT ON harry_runtime_samples TO grafana;
+GRANT SELECT ON harry_latest_runtime_status TO grafana;
 ```
 
 Do not give the Grafana datasource account schema ownership or write

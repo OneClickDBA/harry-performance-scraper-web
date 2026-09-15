@@ -14,7 +14,9 @@ docker-compose/grafana/alerting/oracle-operational-alerts.yaml
 The rules evaluate PostgreSQL tables and views created by the scraper. Oracle
 state rules run once per minute in the `Oracle operational alerts` group.
 Repository-ingestion rules run every five minutes in the
-`Harry repository ingestion alerts` group. A rule creates one alert instance
+`Harry repository ingestion alerts` group. Runtime-pressure rules run every
+minute in the `Harry runtime pressure alerts` group. A rule creates one alert
+instance
 for each returned Oracle database, tablespace, resource, or ASM diskgroup.
 
 The supplied thresholds and pending periods are starting values. Review them
@@ -30,6 +32,10 @@ and notification requirements before treating them as production policy.
 | Oracle tablespace usage is high | Tablespace usage is greater than 90% | 5 minutes | Warning |
 | Oracle resource limit usage is high | A finite Oracle resource limit is greater than 85% utilized | 5 minutes | Warning |
 | Oracle ASM diskgroup usage is high | ASM diskgroup usage is greater than 90% | 5 minutes | Warning |
+| Oracle activity collection is approaching its timeout | Latest activity query uses more than 80% of its configured timeout | 5 minutes | Warning |
+| Harry scheduler cycle is approaching its interval | Total cycle duration uses more than 80% of its configured interval | 5 minutes | Warning |
+| Harry PostgreSQL write is consuming too much of the scrape interval | Repository phase uses more than 50% of its configured interval | 5 minutes | Warning |
+| Harry scheduler is delayed or missing intervals | Start lag exceeds 50% of the interval, or ticker intervals were missed | 2 minutes | Warning |
 | Harry repository ingestion accounting is stale | No accounting flush for more than 15 minutes | 5 minutes | Critical |
 | Harry SQL sample ingestion dropped sharply | Previous complete UTC day is below 20% of the prior seven-day average | 15 minutes | Warning |
 | Harry repository ingestion increased sharply | Previous complete UTC day exceeds three times the prior seven-day average | 15 minutes | Warning |
@@ -144,6 +150,52 @@ where used_percent > 90
 order by used_percent desc;
 ```
 
+## Runtime Pressure Alerts
+
+The four runtime rules are early-warning signals. They use the configured
+activity timeout and scheduler intervals stored by Harry, so changing
+`performance.activity.queryTimeout`, `performance.activity.interval`, or
+`metrics.scrapeInterval` does not require rewriting fixed alert thresholds.
+
+**Oracle activity collection is approaching its timeout** compares each
+database's latest successful `activity` duration with the configured activity
+query timeout. Check the Oracle Operational Overview for the affected database.
+Increasing duration can indicate Oracle CPU or concurrency pressure, network
+latency, connection-pool delay, or a host scheduling problem. Investigate the
+cause before increasing the timeout, because a larger timeout can hide pressure
+while allowing the sampler to fall behind.
+
+**Harry scheduler cycle is approaching its interval** compares scheduling lag,
+Oracle collection, and repository work with the complete configured interval.
+Use **Cycle Duration vs Configured Interval** and **Scheduler Phase Duration**
+to identify which phase is growing.
+
+**Harry PostgreSQL write is consuming too much of the scrape interval** isolates
+the repository phase. Review PostgreSQL storage latency, pool saturation,
+blocking locks, checkpoints, WAL pressure, partition creation, and retention
+cleanup. The measurement covers all PostgreSQL work performed before the
+scheduler can continue, not only the sample `INSERT` or `COPY` statement.
+
+**Harry scheduler is delayed or missing intervals** reports scheduler start lag
+above half an interval or a dropped ticker interval. Review the other runtime
+signals together with process CPU scheduling, memory pressure, hypervisor or
+container limits, long garbage-collection pauses, and scraper logs.
+
+Inspect the latest state directly:
+
+```sql
+select *
+from harry_latest_runtime_status
+order by ha_scope, scheduler;
+```
+
+Use `harry_runtime_samples` with a bounded `observed_at` range for historical
+analysis. The activity scheduler normally produces one row every two seconds,
+so always include a time predicate. Harry intentionally does not throttle or
+change intervals in response to these measurements; reducing diagnostic detail
+during an incident would remove the evidence these alerts are intended to
+protect.
+
 ## Harry Repository Ingestion Accounting Is Stale
 
 Harry buffers native ingest counters and normally flushes them to
@@ -215,6 +267,8 @@ Verify:
   ID and a supported PostgreSQL plugin alias in Grafana 12 and 13;
 - the datasource account can select the scraper tables and views;
 - the datasource account can select `harry_repository_daily_ingest`;
+- the datasource account can select `harry_runtime_samples` and
+  `harry_latest_runtime_status`;
 - PostgreSQL and Grafana can reach each other;
 - schema auto-migration created the required latest-state views;
 - the alerting provisioning file loaded without errors.

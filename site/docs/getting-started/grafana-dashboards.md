@@ -71,6 +71,7 @@ docker-compose/grafana/dashboards/oracle-operational-overview.json
 Purpose:
 
 - Collector success, freshness, duration, and errors.
+- Per-database collector-duration trends and activity query timeout utilization.
 - Database and instance state.
 - Session and process utilization.
 - Tablespace and ASM capacity.
@@ -89,6 +90,7 @@ oracle_system_counter_samples
 oracle_wait_class_samples
 oracle_scrape_status
 oracle_latest_scrape_status
+harry_latest_runtime_status
 ```
 
 The dashboard uses native typed operational data. It does not query
@@ -278,6 +280,8 @@ Purpose:
 - Ingestion continuity, change against a seven-day baseline, and projected
   30-day repository storage.
 - Current collector freshness, result counts, and collection errors.
+- Scheduler lag, Oracle collection duration, PostgreSQL repository duration,
+  total cycle pressure, missed intervals, and database completion counts.
 - PostgreSQL cache efficiency, workload counters, table maintenance, dead rows,
   sessions, long-running queries, and lock waits.
 - Current Grafana repository sessions and optional historical ranking of reads
@@ -295,6 +299,15 @@ failure can lose up to five minutes of accounting, but does not lose the sample
 rows already committed. Accounting begins after the version containing this
 feature is deployed and is not backfilled for older retained data.
 
+The **Scraper Runtime Pressure** section reads `harry_runtime_samples` and
+`harry_latest_runtime_status`. It separates Oracle collection time from the
+PostgreSQL repository phase and compares total cycle duration with the actual
+configured interval. These panels expose increasing Oracle, network, host, or
+PostgreSQL pressure before collectors time out or data becomes stale. Harry
+does not use the measurements to throttle collection. Runtime trend panels cap
+their queries at the most recent 24 hours even when the dashboard-wide storage
+range is longer, keeping the operational queries bounded.
+
 `sql_text_writes` and `sql_plan_operation_writes` count successful write
 operations against their deduplicated dictionaries. They are not the number of
 currently distinct dictionary rows. Physical storage by source database
@@ -302,11 +315,13 @@ remains an estimate: Harry distributes each partition's measured heap and
 index bytes according to its exact per-database row shares, but PostgreSQL
 pages and indexes are shared within that partition.
 
-When Grafana uses a role that was granted access before this table existed,
-grant access to the new table after Harry creates it:
+When Grafana uses a role that was granted access before these tables existed,
+grant access after Harry creates them:
 
 ```sql
 GRANT SELECT ON harry_repository_daily_ingest TO grafana;
+GRANT SELECT ON harry_runtime_samples TO grafana;
+GRANT SELECT ON harry_latest_runtime_status TO grafana;
 ```
 
 For future Harry tables, a database owner can instead configure suitable
@@ -421,6 +436,8 @@ The dashboards assume the scraper is writing these tables:
 - `oracle_scrape_status`
 - `oracle_latest_scrape_status`
 - `harry_repository_daily_ingest`
+- `harry_runtime_samples`
+- `harry_latest_runtime_status`
 
 If a dashboard is empty, verify:
 
@@ -433,6 +450,7 @@ If a dashboard is empty, verify:
 
 The Docker Compose stack also provisions PostgreSQL-backed starter alert rules
 for collection freshness, Oracle connectivity, tablespaces, resource limits,
-and ASM. See [Grafana Alerting](/docs/configuration/grafana-alerting) for rule
+ASM, and collection and runtime pressure. See
+[Grafana Alerting](/docs/configuration/grafana-alerting) for rule
 deployment, contact points, and the required independent monitoring of the
 scraper, PostgreSQL, and Grafana themselves.
