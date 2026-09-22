@@ -1,16 +1,20 @@
 ---
 title: "Building Open-Source Oracle Database Performance History with PostgreSQL and Grafana"
-sidebar_position: 2
+sidebar_position: 4
 description: "How Harry evolved from an Oracle metrics exporter into an open-source performance history platform using PostgreSQL and Grafana, with a focus on historical analysis, shared visibility, alerting and practical DBA-driven design."
 ---
 
-# WHY — The problem
+# Building Open-Source Oracle Database Performance History with PostgreSQL and Grafana
+
+How I engineered the observability tool I always wanted as a DBA using open-source components — and how that journey became Harry - Performance Scraper for Oracle Database.
+
+## WHY — The problem
 
 Oracle Database provides an extraordinary amount of performance information. As DBAs, we can inspect sessions, waits, SQL execution statistics, blocking sessions, execution plans and many other internal metrics through its dynamic performance views. When a problem is happening in real time, Oracle gives us plenty of information to investigate it. AWR and ASH are unbeatable when it comes to historical performance analysis, but both depend on Oracle Diagnostics Pack, and that licensing cost often limits where historical performance analysis is available. In many environments, Diagnostics Pack is licensed only for production, critical databases, or a subset of systems where the cost is justified. Development, test, staging and smaller production databases can still suffer from slow SQL, blocking sessions, unexpected load, plan changes or application issues, but the historical evidence needed to investigate them may simply not exist. And those non-production databases could give us evidence in advance of problems that may later cause slowness in production!
 
 There is another limitation I have seen repeatedly over the years: access to Oracle Enterprise Manager is usually restricted to DBAs. There are good reasons for that: OEM is an administrative platform and can expose far more than performance information. The side effect is that developers, application owners and business teams depend on a DBA to tell them what the database is doing.
 
-That creates an unnecessary bottleneck, because performance is rarely a database-only problem. Developers know when a release has changed application behaviour, application teams recognise unusual transaction patterns, and business users often notice abnormal activity before any technical threshold is crossed. Giving those teams visibility changes the equation: Grafana is usually available to the whole organisation, and a read-only dashboard can expose performance information without providing any ability to interfere with a production database. As a consequence, database performance becomes visible to hundreds or thousands of eyes, looking at systems they actually understand and often able to spot anomalies very quickly.
+That creates an unnecessary bottleneck, because performance is rarely a database-only problem. Developers know when a release has changed application behaviour, application teams recognise unusual transaction patterns, and business users often notice abnormal activity before any technical threshold is crossed. Giving those teams visibility changes the equation: Grafana is usually available to the whole organisation, and a read-only dashboard can expose performance information without providing any ability to interfere with a production database. As a consequence, database performance becomes visible to hundreds or thousands of people who understand the systems they are looking at and can often spot anomalies very quickly.
 
 In one of my previous environments, people used to call sudden peaks in database activity “the Tourmalet”, after the famous mountain climb in the Tour de France. The important part was not the nickname, but the fact that people outside the DBA team could see the climb and recognise when something looked wrong. When developers, application teams and business users can see the same performance history, somebody will often notice that “Tourmalet” before the DBA team starts investigating it.
 
@@ -22,7 +26,7 @@ The problem I wanted to solve was therefore broader than simply storing performa
 
 The idea itself remained simple: if Oracle already exposes most of the information we need in real time, why not sample it continuously, store it somewhere else, and make that performance history safely available through tools people already use?
 
-# HOW — Building performance history
+## HOW — Building performance history
 
 The first version of the project did not start as a new monitoring platform. It started from the existing Oracle AI Database Metrics Exporter.
 
@@ -54,7 +58,7 @@ The end result is conceptually simple: Oracle exposes the current state of the d
 
 And perhaps the most important point is that the source of that information is not exotic. I was not discovering a hidden Oracle interface or inventing a new performance methodology. I simply took the same kind of queries that almost every DBA already has somewhere in a file called `oracle_queries.txt`, ran them continuously, and started keeping the answers.
 
-# WHAT — Harry
+## WHAT — Harry
 
 That experiment eventually became Harry — Performance Scraper for Oracle Database, an open-source project designed to preserve Oracle Database performance history using lightweight collectors, PostgreSQL and Grafana.
 
