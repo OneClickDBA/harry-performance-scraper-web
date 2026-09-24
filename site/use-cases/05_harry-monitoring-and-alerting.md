@@ -128,9 +128,7 @@ This makes Harry more trustworthy in real operational environments, because the 
 
 ## Demo improvements
 
-This incident also exposed a practical issue in the public demo: the alerting dashboard showed active alerts, but did not give proper read-only access to Grafana Alerting itself. That has now been fixed.
-
-The demo now includes read-only access to the relevant alerting view, making it easier to understand how Harry's alerting is structured and how these health checks behave in practice.
+As a bonus, this accidental test exposed one issue in the public demo: alerting was visible from the dashboard, but the read-only user could not inspect Grafana Alerting itself. That is fixed now.
 
 ## See it in action
 
@@ -140,4 +138,5 @@ Website: https://harryperformance.com
 
 Demo: https://demo.harryperformance.com
 
-And if you are interested in how Harry approaches Oracle performance history without depending on Oracle Diagnostics Pack, take a look at the rest of the project documentation and use cases.
+This is a perfect example of how systems work in the real world: one small improvement can trigger a chain of events. Sometimes harmless, sometimes much more dangerous for the business.
+And that is exactly why monitoring the monitoring matters.
