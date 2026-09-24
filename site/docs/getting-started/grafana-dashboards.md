@@ -304,9 +304,9 @@ The **Scraper Runtime Pressure** section reads `harry_runtime_samples` and
 PostgreSQL repository phase and compares total cycle duration with the actual
 configured interval. These panels expose increasing Oracle, network, host, or
 PostgreSQL pressure before collectors time out or data becomes stale. Harry
-does not use the measurements to throttle collection. Runtime trend panels cap
-their queries at the most recent 24 hours even when the dashboard-wide storage
-range is longer, keeping the operational queries bounded.
+does not use the measurements to throttle collection. Runtime trend panels use
+the Grafana dashboard time range and adapt their PostgreSQL aggregation bucket
+to Grafana's calculated interval.
 
 `sql_text_writes` and `sql_plan_operation_writes` count successful write
 operations against their deduplicated dictionaries. They are not the number of

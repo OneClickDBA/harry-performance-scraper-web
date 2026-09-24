@@ -9,6 +9,12 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+### 0.3.0, 2026-09-25
+
+- Include the single-database and multi-database sample configuration files in
+  every GitHub Release binary archive.
+- Make all Scraper Runtime Pressure TimeSeries panels honor the complete
+  Grafana dashboard time range instead of imposing an additional 24-hour cap.
 - Add partitioned Harry runtime telemetry and current state for activity and
   scheduled cycles. Record scheduler lag, Oracle collection duration,
   PostgreSQL repository duration, configured limits, missed intervals,

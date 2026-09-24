@@ -98,6 +98,9 @@ The workflow tests both Oracle drivers and publishes:
 - `godror` Linux amd64/arm64 archives built on Oracle Linux 8 and 9;
 - a `SHA256SUMS` file covering every release archive.
 
+Every binary archive includes `example-config.yaml` for a single Oracle
+Database and `example-config-multi-database.yaml` for multiple databases.
+
 Standalone `godror` binaries require Oracle Instant Client on the destination
 system. The release version is derived from the tag; untagged local builds use
 `0.0.0-dev`.
