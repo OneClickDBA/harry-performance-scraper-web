@@ -4,6 +4,11 @@ sidebar_position: 5
 description: "True story: an accidental configuration change triggered Harry’s self-monitoring exactly as designed."
 ---
 
+import harryAlerting01 from '@site/static/img/use-cases/harry-monitoring-and-alerting/harry_alerting_01.png'
+import harryAlerting02 from '@site/static/img/use-cases/harry-monitoring-and-alerting/harry_alerting_02.png'
+import harryAlerting03 from '@site/static/img/use-cases/harry-monitoring-and-alerting/harry_alerting_03.png'
+import harryAlerting04 from '@site/static/img/use-cases/harry-monitoring-and-alerting/harry_alerting_04.png'
+
 # Harry detects stale Oracle performance ingestion before you get a call at 2am
 
 *True story*: while updating Harry to v0.3.0, Grafana suddenly started `/cry`ing with a couple of nice *firing* alerts.
@@ -28,6 +33,13 @@ Harry's alerting detected two different but related symptoms:
 
 - **Harry repository ingestion accounting is stale**
 - **Oracle scraper data is stale**
+
+<a href={harryAlerting01} target="_blank" rel="noopener noreferrer">
+  <img
+    src={harryAlerting01}
+    alt="Active Alerts"
+  />
+</a>
 
 This is useful because those alerts cover different layers of the monitoring path:
 
@@ -56,6 +68,13 @@ That alert is not only saying "something is wrong", it also points directly to t
 * Harry leadership
 * PostgreSQL writes
 * scraper logs
+
+<a href={harryAlerting02} target="_blank" rel="noopener noreferrer">
+  <img
+    src={harryAlerting02}
+    alt="Harry repository ingestion Alerts"
+  />
+</a>
 
 ## Oracle scraper data stale alerts
 
@@ -92,6 +111,20 @@ That includes detecting situations such as:
 * runtime pressure conditions that may affect collection quality
 
 This makes Harry more trustworthy in real operational environments, because the system can tell you not only what Oracle is doing, but also whether Harry itself is collecting and storing data in a healthy way.
+
+<a href={harryAlerting03} target="_blank" rel="noopener noreferrer">
+  <img
+    src={harryAlerting03}
+    alt="Scraper Runtime Pressure on Harry Health dashboard"
+  />
+</a>
+
+<a href={harryAlerting04} target="_blank" rel="noopener noreferrer">
+  <img
+    src={harryAlerting04}
+    alt="Oracle Collector Duration on Oracle Operational Overview dashboard"
+  />
+</a>
 
 ## Demo improvements
 
