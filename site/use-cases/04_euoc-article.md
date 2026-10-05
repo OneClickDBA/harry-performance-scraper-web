@@ -5,6 +5,8 @@ description: "How Harry evolved from an Oracle metrics exporter into an open-sou
 ---
 
 import dah01 from '@site/static/img/use-cases/euoc-article/DAH_01.png';
+import dah02 from '@site/static/img/use-cases/euoc-article/DAH_02.png';
+import topconsumers02 from '@site/static/img/use-cases/euoc-article/TOP_consumers_crop_02.png';
 
 # Building Open-Source Oracle Database Performance History with PostgreSQL and Grafana
 
@@ -72,9 +74,9 @@ The objective is simple: reduce the number of times a DBA has to answer, “I ca
 
 The central piece is Database Activity History, or DAH. DAH uses high-frequency sampled data to show how database activity evolves over time, in the way I had always wanted to see it as a DBA: active sessions, Top SQL, sessions, `SQL_ID`s and wait events presented in the simplest way I could imagine, because I want to see “The Tourmalet” almost instantly. Instead of looking only at the current state of `V$SESSION`, that information becomes a historical dataset that can also be explored later.
 
-<a href={dah01} target="_blank" rel="noopener noreferrer">
+<a href={dah02} target="_blank" rel="noopener noreferrer">
   <img
-    src={dah01}
+    src={dah02}
     alt="Database Activity History (DAH) in Harry. High-frequency sampled data shows database activity over time together with wait classes, Top SQL and Top Sessions."
   />
 </a>
@@ -82,6 +84,14 @@ The central piece is Database Activity History, or DAH. DAH uses high-frequency 
 But active sessions are only one part of the picture. Harry also collects SQL execution statistics, allowing SQL activity to be compared across different periods. SQL text is stored separately so that large statements do not need to be duplicated with every sample, while execution-plan information makes it possible to inspect how a statement was executed and whether its plan changed over time.
 
 The Top Consumers dashboards combine this information to identify expensive SQL statements and provide context such as execution statistics, SQL text and execution plans. This is particularly useful when the interesting question is not simply “What is slow now?”, but “What was consuming the database between 02:00 and 02:15?”
+
+<a href={topconsumers02} target="_blank" rel="noopener noreferrer">
+  <img
+    src={topconsumers02}
+    alt="Harry Top Consumers dashboard correlating SQL performance metrics with the execution plan used during the selected historical time window."
+  />
+</a>
+
 
 Session history provides another perspective. Connections can be inspected by user, service, application module or other attributes exposed by Oracle. Blocking information is also sampled, allowing locking incidents to be investigated even when the blocking session disappeared long before the DBA was called.
 
