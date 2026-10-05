@@ -7,6 +7,7 @@ description: "How Harry evolved from an Oracle metrics exporter into an open-sou
 import dah01 from '@site/static/img/use-cases/euoc-article/DAH_01.png';
 import dah03 from '@site/static/img/use-cases/euoc-article/DAH_03.png';
 import topconsumers02 from '@site/static/img/use-cases/euoc-article/TOP_consumers_crop_02.png';
+import harry01 from '@site/static/img/use-cases/euoc-article/full_harry_performance_transparent.png';
 
 # Building Open-Source Oracle Database Performance History with PostgreSQL and Grafana
 
@@ -112,3 +113,41 @@ The rule is simple: if a DBA would normally execute a query during an incident a
 
 In that sense, Harry is less about inventing a new way to analyse Oracle performance and more about preserving the evidence DBAs already know how to use. The queries were already there; Harry simply started running them before somebody needed the answer.
 
+## WHO — Harry??
+
+Who is Harry in reality?  
+
+Its difficul to find something easy to remember but with strong personality.  
+As I'm a computers but also videogames I began thinking in terms of videogames and one protagonist came instantly to my mind: Mr Driller from Namco. Mr Driller uses a giant drill to drill-down into the every screen blocks until he reach the "core" and that is what I normally do: drill down to find problems and one of the reason building what I was building at that time: have enough information to be drilled down.  
+But I don't want legal complains using so similar to "driller".  
+Continuing with my own vision of myself as a "workman" another image came to me: _Hammerin' Harry_ also with his huge tool to accomplish his job :rofl:, this time a hammer. Multiple times I've found myself using the hammer to "smash" problems but also it reflects hard work.
+
+So I puth both together and perform a visual designg  which mix enjoyable but strong look.
+Finally, I took the name that nobody will came back to me later send me a legal complain: _Harry_  
+Everything else came quickly: Performace had to be the 1st word as it defines everything, _scraper_ to diferentiate from a Prometheus exporter and finally the objective.
+
+
+## WHO — Harry?
+
+Who is Harry, actually?
+
+It is surprisingly difficult to find a name that is easy to remember but still has a strong personality.  
+As both a computer guy and a videogame player, I started thinking in videogame terms, and one character came immediately to mind: Namco's _Mr. Driller_.  
+Mr. Driller uses a huge drill to dig through each level until he reaches the bottom. That felt very familiar to me. Troubleshooting is often exactly that: drill down through layers of information until you finally reach the real problem. It was also one of the reasons I was building the project in the first place: I wanted to preserve enough information to be able to drill down into an incident later.  
+However, I did not particularly want a future legal discussion over a name too close to "Driller".  
+Continuing with my own image of the DBA as a kind of workman, another videogame character came to mind: _Hammerin' Harry_, also carrying an oversized tool to get the job done — this time, a hammer.  
+I have found myself using the hammer to "smash" problems more than once, and it also represents something much less glamorous but equally important: hard work.  
+
+So I mixed both ideas together and developed a visual identity that combined a friendly appearance with a strong, workman-like personality.  
+For the name, I kept the safest and simplest part: _Harry_.  
+  
+Everything else followed quite naturally. _Performance_ had to come first because it defines the purpose of the project. _Scraper_ helped differentiate it from a Prometheus exporter. And finally came the target itself: Oracle Database.
+
+That is how _Harry — Performance Scraper for Oracle Database_ got its name.
+
+<a href={harry01} target="_blank" rel="noopener noreferrer">
+  <img
+    src={harry01}
+    alt="Harry - Performance Scraper for Oracle Database"
+  />
+</a>
