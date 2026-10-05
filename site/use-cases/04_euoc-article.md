@@ -4,6 +4,8 @@ sidebar_position: 4
 description: "How Harry evolved from an Oracle metrics exporter into an open-source performance history platform using PostgreSQL and Grafana, with a focus on historical analysis, shared visibility, alerting and practical DBA-driven design."
 ---
 
+import dah01 from '@site/static/img/use-cases/euoc-article/DAH_01.png';
+
 # Building Open-Source Oracle Database Performance History with PostgreSQL and Grafana
 
 How I engineered the observability tool I always wanted as a DBA using open-source components — and how that journey became Harry - Performance Scraper for Oracle Database.
@@ -69,6 +71,13 @@ That does not mean storing everything. Trying to preserve every possible piece o
 The objective is simple: reduce the number of times a DBA has to answer, “I cannot tell you. We were not collecting that information.”
 
 The central piece is Database Activity History, or DAH. DAH uses high-frequency sampled data to show how database activity evolves over time, in the way I had always wanted to see it as a DBA: active sessions, Top SQL, sessions, `SQL_ID`s and wait events presented in the simplest way I could imagine, because I want to see “The Tourmalet” almost instantly. Instead of looking only at the current state of `V$SESSION`, that information becomes a historical dataset that can also be explored later.
+
+<a href={dah01} target="_blank" rel="noopener noreferrer">
+  <img
+    src={dah01}
+    alt="Database Activity History (DAH) in Harry. High-frequency sampled data shows database activity over time together with wait classes, Top SQL and Top Sessions."
+  />
+</a>
 
 But active sessions are only one part of the picture. Harry also collects SQL execution statistics, allowing SQL activity to be compared across different periods. SQL text is stored separately so that large statements do not need to be duplicated with every sample, while execution-plan information makes it possible to inspect how a statement was executed and whether its plan changed over time.
 
