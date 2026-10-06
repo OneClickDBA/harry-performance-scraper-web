@@ -113,20 +113,6 @@ The rule is simple: if a DBA would normally execute a query during an incident a
 
 In that sense, Harry is less about inventing a new way to analyse Oracle performance and more about preserving the evidence DBAs already know how to use. The queries were already there; Harry simply started running them before somebody needed the answer.
 
-## WHO — Harry??
-
-Who is Harry in reality?  
-
-Its difficul to find something easy to remember but with strong personality.  
-As I'm a computers but also videogames I began thinking in terms of videogames and one protagonist came instantly to my mind: Mr Driller from Namco. Mr Driller uses a giant drill to drill-down into the every screen blocks until he reach the "core" and that is what I normally do: drill down to find problems and one of the reason building what I was building at that time: have enough information to be drilled down.  
-But I don't want legal complains using so similar to "driller".  
-Continuing with my own vision of myself as a "workman" another image came to me: _Hammerin' Harry_ also with his huge tool to accomplish his job :rofl:, this time a hammer. Multiple times I've found myself using the hammer to "smash" problems but also it reflects hard work.
-
-So I puth both together and perform a visual designg  which mix enjoyable but strong look.
-Finally, I took the name that nobody will came back to me later send me a legal complain: _Harry_  
-Everything else came quickly: Performace had to be the 1st word as it defines everything, _scraper_ to diferentiate from a Prometheus exporter and finally the objective.
-
-
 ## WHO — Harry?
 
 Who is Harry, actually?
