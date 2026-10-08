@@ -9,6 +9,38 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+- Add stable database identity and product/version metadata, Data Guard
+  protection state, observed SGA/PGA allocation, current tablespace allocation,
+  and instance-level `DB CPU`, `DB time`, IOPS, and I/O byte counters. Collect
+  the four enrichment domains independently so a missing grant or unsupported
+  source leaves existing operational telemetry available, and persist the new
+  fields in nullable, retention-managed PostgreSQL columns.
+- Use the new telemetry in the Operational Overview, DAH, and Alerting Overview
+  dashboards. Separate SQL, transaction, block, redo, IOPS, and throughput
+  rates by unit; expose database CPU and DB-time demand, stable identity, Data
+  Guard protection, current instance memory, and allocated versus maximum
+  tablespace pressure. Keep the new fleet CPU/PGA indicators informational
+  until representative alert thresholds have been validated.
+- Make the Docker Compose scrapers monitor each Oracle test CDB through its
+  root service using a dedicated common monitoring user with
+  `CONTAINER_DATA=ALL`. This exposes instance-level `CON_ID = 0` CPU and I/O
+  counters while preserving visibility of workloads running in `FREEPDB1`.
+
+### 0.3.1, 2026-10-09
+
+- Add child-cursor, parsing-schema, and module context to the Top Consumers
+  selected-SQL plan summary using the existing bounded `GV$SQL` detail pass.
+  Store the context once per cursor/plan identity in
+  `oracle_sql_cursor_metadata`, avoid unchanged updates more than once per UTC
+  day, and remove expired metadata in small indexed batches. Broad SQL
+  Performance rankings continue to query `oracle_sql_samples` directly so
+  contextual enrichment is performed only after a SQL ID is selected.
+- Make the latest tablespace, resource-limit, and ASM diskgroup views resolve
+  the exact current operational collection through `oracle_latest_scrape_status`
+  with a 24-hour freshness bound. This prevents Operational Overview panels and
+  alerts from scanning retained history and reduces hot-standby recovery
+  conflicts when Grafana reads from a PostgreSQL replica.
+
 ### 0.3.0, 2026-09-25
 
 - Include the single-database and multi-database sample configuration files in
