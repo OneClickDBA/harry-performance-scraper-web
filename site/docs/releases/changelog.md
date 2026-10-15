@@ -9,6 +9,8 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+### 0.4.0, 2026-10-16
+
 - Add stable database identity and product/version metadata, Data Guard
   protection state, observed SGA/PGA allocation, current tablespace allocation,
   and instance-level `DB CPU`, `DB time`, IOPS, and I/O byte counters. Collect
