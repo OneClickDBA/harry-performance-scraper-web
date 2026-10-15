@@ -9,6 +9,13 @@ List of upcoming and historic changes to the scraper.
 
 ### Next, TBD
 
+- Consolidate the Oracle SQL Performance overview into Oracle SQL Top
+  Consumers. Add a compact `Rank SQL by` selector for elapsed time, CPU time,
+  User I/O wait, executions, buffer gets, disk reads, and elapsed time per
+  execution; apply the selected ranking before the Top 20 limit; retain SQL
+  efficiency indicators in the existing table; and retire the duplicate
+  provisioned dashboard without increasing dashboard height.
+
 ### 0.4.0, 2026-10-16
 
 - Add stable database identity and product/version metadata, Data Guard

@@ -42,7 +42,6 @@ queried by SQL-backed Grafana dashboards.
   - optional `GV$ACTIVE_SESSION_HISTORY`, only when explicitly enabled
 - Grafana dashboards backed by PostgreSQL:
   - Database Activity History (DAH)
-  - Oracle SQL Performance
   - Oracle SQL Top Consumers
   - Current Sessions and Blocking
   - Oracle Operational Overview

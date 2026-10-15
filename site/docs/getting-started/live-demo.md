@@ -29,7 +29,6 @@ The demo includes Harry's principal operational and troubleshooting views:
 
 - Oracle Database Activity History (DAH)
 - Oracle SQL Top Consumers
-- Oracle SQL Performance
 - Oracle Current Sessions and Blocking
 - Oracle Operational Overview
 - Oracle Alerting Overview

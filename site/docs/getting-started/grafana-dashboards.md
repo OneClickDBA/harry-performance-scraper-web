@@ -150,38 +150,6 @@ rows separate. `SESSION` is the default collector. `ASH` appears only when the
 scraper was explicitly configured to use Oracle ASH and the operator accepted
 responsibility for verifying Diagnostics Pack licensing.
 
-### Oracle SQL Performance
-
-File:
-
-```text
-docker-compose/grafana/dashboards/oracle-sql-performance.json
-```
-
-Purpose:
-
-- Top SQL by elapsed time delta.
-- Top SQL by CPU time delta.
-- Top SQL by User I/O wait delta.
-- SQL efficiency outliers.
-- Short SQL text previews in ranking tables.
-
-Primary tables:
-
-```text
-oracle_sql_samples
-oracle_sql_texts
-```
-
-This dashboard is the category overview. Select a `SQL_ID` in any ranking table
-to open the same database, SQL ID, and time range in the Top Consumers
-dashboard. Ranking tables intentionally show only a short SQL preview.
-
-[![Oracle SQL Performance dashboard showing SQL rankings by elapsed time, CPU time, I/O waits, and efficiency](/img/screenshots/sql_performance.png)](/img/screenshots/sql_performance.png)
-
-_Oracle SQL Performance dashboard with anonymized sample data. Select the image
-to open it at full resolution._
-
 ### Oracle SQL Top Consumers
 
 File:
@@ -192,24 +160,36 @@ docker-compose/grafana/dashboards/oracle-sql-top-consumers.json
 
 Purpose:
 
-- Top 20 SQL consumers by elapsed-time delta for the selected time range.
+- Top 20 SQL consumers for the selected time range, ranked by elapsed time,
+  CPU time, User I/O wait, executions, buffer gets, disk reads, or elapsed time
+  per execution.
 - One-minute average database-time contribution for elapsed, CPU, User I/O,
   application, concurrency, and cluster time.
 - One-minute average execution, row-processing, and parse-call rates.
 - One-minute average buffer-get, disk-read, and direct-write rates.
-- Category ranks and the dominant measured pressure for every top consumer.
+- Category ranks, SQL efficiency indicators, and the dominant measured
+  pressure for every top consumer.
 - Available plan hashes, child cursors, parsing schemas, application modules,
   and cached execution-plan operations for the selected SQL ID.
 - Complete `SQL_FULLTEXT` for the selected `SQL_ID`.
 
-The top table is the entry point for statement-level troubleshooting. Select a
-`SQL_ID` to populate the detailed graphs, full SQL text, and plans below it.
-Select `PLAN_HASH_VALUE` when a statement has multiple collected plans. The
-Selected SQL Plan Hashes table reads child-cursor, schema, and module context
-from `oracle_sql_cursor_metadata` only after a SQL ID is selected. The plan
-panel displays the cached `GV$SQL_PLAN` operation tree, objects, optimizer
-estimates, partition bounds, and predicates; it does not contain runtime
-`ALLSTATS` values.
+The top table is the entry point for statement-level troubleshooting. Use
+`Rank SQL by` to change which SQL statements enter the Top 20; this changes the
+PostgreSQL ranking before the limit rather than sorting a fixed result set in
+the browser. `Elapsed Time` is the default. `Elapsed / Execution` preserves the
+efficiency-outlier workflow and is supported by rows processed, buffer gets per
+row, and disk reads per execution columns.
+
+Each SQL ID occupies one Top 20 position. Harry calculates counter deltas
+independently for each Oracle instance and plan, then combines them by SQL ID
+to rank the statement's total database impact. Select a `SQL_ID` to populate
+the detailed graphs, full SQL text, and plans below it. Select
+`PLAN_HASH_VALUE` when a statement has multiple collected plans. The Selected
+SQL Plan Hashes table reads child-cursor, schema, and module context from
+`oracle_sql_cursor_metadata` only after a SQL ID is selected. The plan panel
+displays the cached `GV$SQL_PLAN` operation tree, objects, optimizer estimates,
+partition bounds, and predicates; it does not contain runtime `ALLSTATS`
+values.
 
 Plan-operation colors identify access and join methods for visual scanning;
 they do not classify an operation as universally good or bad. Full application

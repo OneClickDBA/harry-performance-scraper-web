@@ -133,10 +133,10 @@ aggregation of potentially millions of rows. That cost is unnecessary: these
 attributes become useful after an operator has selected a statement to
 investigate.
 
-The Oracle SQL Performance dashboard therefore keeps its broad elapsed, CPU,
-I/O, and efficiency rankings on `oracle_sql_samples`. After an operator opens a
-SQL ID in Top Consumers, the Selected SQL Plan Hashes table joins its small set
-of instance/plan summaries to `oracle_sql_cursor_metadata`. This reports all
+The Top Consumers ranking therefore keeps its broad elapsed, CPU, I/O,
+execution, and efficiency analysis on `oracle_sql_samples`. After an operator
+selects a SQL ID, the Selected SQL Plan Hashes table joins its small set of
+instance/plan summaries to `oracle_sql_cursor_metadata`. This reports all
 observed children, schemas, and modules without another large sample-table
 index or a broad enrichment join.
 
