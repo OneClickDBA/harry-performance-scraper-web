@@ -115,7 +115,7 @@ function ArchitectureDiagram() {
   const oracleLogo = useBaseUrl('/img/architecture/oracle.svg');
   const postgresqlLogo = useBaseUrl('/img/architecture/postgresql.png');
   const grafanaLogo = useBaseUrl('/img/architecture/grafana.svg');
-  const dashboard = useBaseUrl('/img/screenshots/dah.png');
+  const dashboard = useBaseUrl('/img/screenshots/DAH.png');
 
   return (
     <section className={styles.architecture}>

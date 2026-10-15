@@ -249,6 +249,14 @@ DB_PASSWORD='<choose-a-local-demo-password>' make docker-compose-up
 The sample Oracle listeners are intended for localhost development. Do not
 expose the Compose stack on a shared or public host.
 
+Harry connects to each test database's `CDB$ROOT` service as the dedicated
+common user `C##HARRY_MONITORING`. The initialization script grants that user
+`SELECT_CATALOG_ROLE` and `CONTAINER_DATA=ALL`, allowing instance-level
+`CON_ID = 0` CPU, time-model, and I/O telemetry while retaining visibility of
+sessions and SQL running in `FREEPDB1`. Application schemas and local load
+tests, including HR, remain inside `FREEPDB1`; the PDB is not registered as a
+separate monitored database.
+
 When the stack is running:
 
 - First Harry instance: [http://localhost:9161/healthz](http://localhost:9161/healthz)

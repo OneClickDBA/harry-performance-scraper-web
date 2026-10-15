@@ -61,6 +61,8 @@ GRANT SELECT ON sys.gv_$sql_plan TO monitoring_user;
 GRANT SELECT ON sys.dba_tablespace_usage_metrics TO monitoring_user;
 GRANT SELECT ON sys.dba_tablespaces TO monitoring_user;
 GRANT SELECT ON sys.dba_temp_free_space TO monitoring_user;
+GRANT SELECT ON sys.dba_data_files TO monitoring_user;
+GRANT SELECT ON sys.dba_temp_files TO monitoring_user;
 GRANT SELECT ON sys.gv_$asm_diskgroup_stat TO monitoring_user;
 GRANT SELECT ON sys.gv_$con_sysmetric TO monitoring_user;
 GRANT SELECT ON sys.gv_$database TO monitoring_user;
@@ -68,15 +70,20 @@ GRANT SELECT ON sys.gv_$datafile TO monitoring_user;
 GRANT SELECT ON sys.gv_$parameter TO monitoring_user;
 GRANT SELECT ON sys.gv_$process TO monitoring_user;
 GRANT SELECT ON sys.gv_$resource_limit TO monitoring_user;
+GRANT SELECT ON sys.gv_$sga TO monitoring_user;
+GRANT SELECT ON sys.gv_$pgastat TO monitoring_user;
 GRANT SELECT ON sys.gv_$sysstat TO monitoring_user;
+GRANT SELECT ON sys.gv_$sys_time_model TO monitoring_user;
 GRANT SELECT ON sys.gv_$system_wait_class TO monitoring_user;
+GRANT SELECT ON sys.product_component_version TO monitoring_user;
 ```
 
 The operational grants cover database and instance state, session and process
 capacity, configured resource limits, permanent and temporary tablespace
-usage, ASM capacity, cumulative system counters, wait classes, and bounded
-system metrics. They are required when the default `operational.enabled: true`
-setting is used.
+usage and allocation, ASM capacity, cumulative CPU/I/O and system counters,
+observed SGA/PGA allocation, database product/version identity, wait classes,
+and bounded system metrics. They are required when the default
+`operational.enabled: true` setting is used.
 
 To collect alert logs, also grant:
 

@@ -26,6 +26,7 @@ tables:
 | --- | --- |
 | `oracle_sql_samples` | `GV$SQLSTATS` counters by SQL ID, including executions, CPU, elapsed time, and I/O |
 | `oracle_sql_texts` | Complete SQL text, stored once per source database and SQL ID |
+| `oracle_sql_cursor_metadata` | Bounded `GV$SQL` child-cursor context: parsing schema, module, plan identity, and first/last observation |
 | `oracle_sql_plans` | Cached `GV$SQL_PLAN` operations, stored once per cursor-plan identity |
 | `oracle_session_samples` | Current sessions, SQL, waits, modules, programs, and machines |
 | `oracle_blocking_session_samples` | Waiter and blocker relationships |
@@ -63,12 +64,29 @@ SQL statistics, SQL text, and execution plans have different collection and stor
 `oracle_sql_samples` is a daily partitioned fact table and does not duplicate
 the statement text in every sample. Its frequent query reads recently active
 rows from `GV$SQLSTATS`, which Oracle provides as a SQL-ID-level statistics
-view. Between detail passes, the scraper accumulates positive counter deltas
-across instances and plans for each SQL ID. The next bounded detail pass ranks
+view. When Harry connects to a CDB root, it aggregates contributions visible
+from multiple containers into one row per instance, SQL ID, and plan hash;
+PDB-level SQL attribution is intentionally outside the current collection
+model. Between detail passes, the scraper accumulates positive counter deltas
+across instances and plans for each SQL ID. A lower cumulative value establishes
+a new baseline and contributes zero for that ambiguous interval instead of
+being counted as a complete new counter. The next bounded detail pass ranks
 those interval deltas by elapsed time, then reads `SQL_FULLTEXT` and child
-cursor keys from `GV$SQL` only for the selected SQL IDs. This prevents a
-historically expensive, long-lived cursor from permanently outranking a newly
-expensive statement merely because its lifetime counter is larger.
+cursor keys from `GV$SQL` only for the selected SQL IDs. This prevents both a
+historically expensive cursor and changing `GV$SQLSTATS` contributors from
+manufacturing top-consumer workload that did not occur in the selected period.
+
+The bounded detail pass also records `PARSING_SCHEMA_NAME` and `MODULE` in
+`oracle_sql_cursor_metadata`, keyed by source database, instance, SQL ID, child
+number, and plan hash. `oracle_sql_samples_enriched` combines that deduplicated
+context with the frequent SQL statistics for Grafana. It reports all child
+cursors, schemas, and modules observed for an instance/SQL/plan identity rather
+than attributing aggregate `GV$SQLSTATS` counters to an arbitrary child cursor.
+`MODULE` remains empty when the client does not instrument sessions with
+`DBMS_APPLICATION_INFO`. Disabling `performance.sqlPlans` also disables this
+shared bounded detail pass, including SQL text and cursor metadata collection.
+The metadata is not reconstructed from older retained SQL samples; populated
+context appears after the next successful bounded detail pass.
 
 `oracle_sql_texts` is a non-partitioned
 lookup table keyed by `(source_database, sql_id)` and stores Oracle
@@ -87,9 +105,17 @@ valid, while text or plan details can be unavailable. The stored cardinality,
 cost, bytes, and predicate values are optimizer estimates; runtime `ALLSTATS`
 data is not enabled or collected.
 
+Unchanged cursor metadata advances `last_seen_at` at most once per UTC day;
+schema or module changes are stored immediately. This avoids rewriting stable
+dimension rows every time the bounded detail collector runs. Cursor metadata
+is deliberately non-partitioned because partitioning by `last_seen_at` would
+move active rows between partitions and weaken natural-key uniqueness.
+
 When PostgreSQL retention is enabled, SQL text and plan operations are deleted
 only after their last known reference is older than the oldest retained daily
-partition. When retention is disabled, lookup-table cleanup is also disabled.
+partition. Expired cursor metadata is removed through indexed, bounded batches
+of at most 2,000 rows, with no more than five batches per hourly maintenance
+cycle. When retention is disabled, lookup-table cleanup is also disabled.
 
 ## Native Operational Collection
 
@@ -109,12 +135,12 @@ than JSON labels in `oracle_metric_samples`:
 
 | PostgreSQL table | Collected data |
 | --- | --- |
-| `oracle_database_status_samples` | Instance/database status, role, open mode, startup time, container, and platform |
-| `oracle_instance_samples` | Session/process counts and selected CPU, SGA, and PGA limits |
+| `oracle_database_status_samples` | Stable DBID/unique name, product/version, instance/database status, role, protection, open mode, startup time, container, and platform |
+| `oracle_instance_samples` | Session/process counts, configured CPU/SGA/PGA limits, and observed SGA/PGA allocation |
 | `oracle_resource_limit_samples` | Current, maximum, and configured Oracle resource utilization |
-| `oracle_tablespace_samples` | Permanent and temporary tablespace capacity |
+| `oracle_tablespace_samples` | Permanent and temporary used, allocated, and maximum tablespace capacity |
 | `oracle_asm_diskgroup_samples` | ASM total, free, and usable capacity |
-| `oracle_system_counter_samples` | Selected cumulative `GV$SYSSTAT` counters and reset-aware interval deltas |
+| `oracle_system_counter_samples` | Selected cumulative `GV$SYSSTAT` and `GV$SYS_TIME_MODEL` counters with reset-aware interval deltas |
 | `oracle_wait_class_samples` | Cumulative wait-class time and reset-aware interval deltas |
 | `oracle_system_metric_samples` | Selected bounded `GV$CON_SYSMETRIC` values |
 | `oracle_scrape_status` | Connectivity and collector success, duration, row count, and errors |
@@ -124,11 +150,28 @@ The scraper keeps in-memory baselines for cumulative counters. The first sample
 after startup has no delta. A lower subsequent value is marked as a counter
 reset instead of producing a negative rate.
 
+The instance-level CPU and I/O collector stores `DB CPU`, `DB time`, physical
+read/write request counts, and physical read/write byte counts with
+`con_id = 0`. `DB CPU` and `DB time` are measured in microseconds. Dividing a
+`DB CPU` delta by elapsed wall-clock microseconds estimates consumed CPU cores;
+the value is Oracle workload demand, not host CPU utilization. PDB-level
+analytics are not collected.
+
+Observed memory remains distinct from configured capacity. `sga_allocated_bytes`
+and `pga_allocated_bytes` describe current Oracle allocation, while
+`pga_max_allocated_bytes` is a high-water value since instance startup. These
+measurements exclude operating-system and service overhead and do not by
+themselves prove that reducing configured memory is safe.
+
 Current-state rows for databases removed from the configuration expire with
 the global PostgreSQL retention period. The `oracle_latest_scrape_status`
 current-state table and views including
 `oracle_latest_tablespace_samples`, `oracle_system_counter_rates`, and
 `oracle_wait_class_rates` provide stable inputs for dashboards and alerts.
+The latest tablespace, resource-limit, and ASM diskgroup views use the exact
+timestamp recorded for their current collector result and only expose results
+from the previous 24 hours. This avoids scanning retained partitions on
+PostgreSQL replicas and prevents stale capacity data from appearing current.
 
 ## Runtime Pressure Telemetry
 

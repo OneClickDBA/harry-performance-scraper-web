@@ -109,8 +109,13 @@ metrics:
 
 - `scrapeInterval`: How often the scraper collects Oracle data and writes to
   PostgreSQL. Configure this for continuous collection.
-- `connectionBackoff`: How long to wait before retrying an invalid database
-  connection. Defaults to `5m`.
+- `connectionBackoff`: How long to wait before retrying an unavailable or
+  invalid database connection. Defaults to `5m`. A failed connectivity probe
+  opens a per-database circuit breaker: Harry keeps the database in collector
+  status as failed, stops issuing activity queries to that target, and
+  continues collecting every healthy database. Activity collection resumes
+  automatically after a scheduled connectivity probe succeeds; removing a
+  temporarily unavailable database from the configuration is not required.
 - `definitions`: Optional ordered list of TOML or YAML files containing
   additional SQL-derived metrics. Later files override duplicate generated
   metric identifiers from earlier files. If omitted, native operational and
@@ -145,6 +150,12 @@ One domain failing does not discard rows returned by other domains. Every
 domain writes success, duration, sample count, and a bounded error message to
 the partitioned `oracle_scrape_status` history and transactionally updates its
 row in `oracle_latest_scrape_status`.
+
+Database identity, instance memory, instance-level CPU/I/O counters, and
+tablespace allocation use independent enrichment queries on this same schedule.
+An enrichment failure leaves the existing database-status, instance,
+system-counter, and tablespace samples available with nullable enrichment
+fields and is reported under its own collector status.
 
 ## Native Performance Configuration
 
@@ -257,11 +268,11 @@ output:
     databaseActivityTable: oracle_database_activity_samples
 ```
 
-`oracle_sql_texts`, `oracle_sql_plans`, and all native operational tables and
-views are derived from `sqlSamplesTable` and created in the same PostgreSQL
-schema. For example,
-`monitoring.oracle_sql_samples` uses `monitoring.oracle_sql_texts` and
-`monitoring.oracle_sql_plans`.
+`oracle_sql_texts`, `oracle_sql_cursor_metadata`, `oracle_sql_plans`,
+`oracle_sql_samples_enriched`, and all native operational tables and views are
+derived from `sqlSamplesTable` and created in the same PostgreSQL schema. For
+example, `monitoring.oracle_sql_samples` uses companion objects in the
+`monitoring` schema.
 
 Schema-qualified names may be used, for example:
 

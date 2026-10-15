@@ -41,8 +41,11 @@ Purpose:
 - Current firing, pending, no-data, and error states from Grafana Alerting.
 - Latest collector health across every configured Oracle database.
 - Failed or stale collectors requiring investigation.
-- Tablespace, finite resource-limit, and ASM capacity risks.
-- Latest database and instance state.
+- Allocated and maximum tablespace pressure, finite resource-limit pressure,
+  and ASM capacity risks.
+- Latest database identity, product version, Data Guard protection, and
+  instance state.
+- Current database CPU demand and PGA pressure across the monitored fleet.
 - Normal Oracle alert instances that confirm rule evaluation.
 
 This is a global operations dashboard. It intentionally has no
@@ -53,7 +56,9 @@ tables link to the corresponding database in Oracle Operational Overview.
 The Alert list panels query Grafana's actual alert-rule state and are
 authoritative for firing and pending status. PostgreSQL panels provide the
 current investigation context; they do not independently reproduce Grafana's
-pending durations, no-data handling, or silences.
+pending durations, no-data handling, or silences. CPU and PGA pressure are
+informational dashboard signals until representative alert thresholds have
+been validated; Harry does not provision default alert rules for them.
 
 [![Oracle Alerting Overview dashboard showing alert states, collector health, and Oracle capacity risks](/img/screenshots/alerting_overview.png)](/img/screenshots/alerting_overview.png)
 
@@ -72,11 +77,14 @@ Purpose:
 
 - Collector success, freshness, duration, and errors.
 - Per-database collector-duration trends and activity query timeout utilization.
-- Database and instance state.
+- Stable database identity, Oracle product/version, database role, Data Guard
+  protection, and instance state.
 - Session and process utilization.
-- Tablespace and ASM capacity.
+- Current SGA/PGA allocation and configured memory capacity.
+- Tablespace used, allocated, and maximum capacity plus ASM capacity.
 - Oracle resource-limit pressure.
-- Reset-aware system activity and wait-class rates.
+- Reset-aware CPU and database-time demand, SQL and transaction rates, block
+  activity, IOPS, I/O throughput, redo generation, and wait-class rates.
 
 Primary tables:
 
@@ -112,6 +120,7 @@ docker-compose/grafana/dashboards/database-activity-history.json
 Purpose:
 
 - Average active sessions by wait class.
+- Database-level CPU-core and DB-time demand as a time-model reference.
 - Top SQL by active samples.
 - Top sessions by active samples.
 - Activity by `SQL_ID`.
@@ -119,14 +128,17 @@ Purpose:
 - Top wait events.
 - Module/program activity.
 
-Primary table:
+Primary tables:
 
 ```text
 oracle_database_activity_samples
+oracle_system_counter_samples
 ```
 
 This dashboard is the AAS-style historical activity view. It intentionally uses
-high-cardinality fields that should not be Prometheus labels.
+high-cardinality fields that should not be Prometheus labels. The database
+time-model panel complements sampled activity but cannot attribute its CPU or
+DB-time values to individual SQL statements, sessions, or wait classes.
 
 [![Database Activity History dashboard showing average active sessions, top SQL, top sessions, and recent activity](/img/screenshots/dah.png)](/img/screenshots/dah.png)
 
@@ -159,7 +171,6 @@ Primary tables:
 ```text
 oracle_sql_samples
 oracle_sql_texts
-oracle_sql_plans
 ```
 
 This dashboard is the category overview. Select a `SQL_ID` in any ranking table
@@ -187,13 +198,16 @@ Purpose:
 - One-minute average execution, row-processing, and parse-call rates.
 - One-minute average buffer-get, disk-read, and direct-write rates.
 - Category ranks and the dominant measured pressure for every top consumer.
-- Available plan hashes and cached execution-plan operations.
+- Available plan hashes, child cursors, parsing schemas, application modules,
+  and cached execution-plan operations for the selected SQL ID.
 - Complete `SQL_FULLTEXT` for the selected `SQL_ID`.
 
 The top table is the entry point for statement-level troubleshooting. Select a
 `SQL_ID` to populate the detailed graphs, full SQL text, and plans below it.
 Select `PLAN_HASH_VALUE` when a statement has multiple collected plans. The
-plan panel displays the cached `GV$SQL_PLAN` operation tree, objects, optimizer
+Selected SQL Plan Hashes table reads child-cursor, schema, and module context
+from `oracle_sql_cursor_metadata` only after a SQL ID is selected. The plan
+panel displays the cached `GV$SQL_PLAN` operation tree, objects, optimizer
 estimates, partition bounds, and predicates; it does not contain runtime
 `ALLSTATS` values.
 
@@ -282,6 +296,9 @@ Purpose:
 - Current collector freshness, result counts, and collection errors.
 - Scheduler lag, Oracle collection duration, PostgreSQL repository duration,
   total cycle pressure, missed intervals, and database completion counts.
+- Per-database activity attempts, failures, timeouts, duration, sample volume,
+  and latest error so an unhealthy database can be isolated from aggregate
+  activity-cycle pressure.
 - PostgreSQL cache efficiency, workload counters, table maintenance, dead rows,
   sessions, long-running queries, and lock waits.
 - Current Grafana repository sessions and optional historical ranking of reads
@@ -308,20 +325,29 @@ does not use the measurements to throttle collection. Runtime trend panels use
 the Grafana dashboard time range and adapt their PostgreSQL aggregation bucket
 to Grafana's calculated interval.
 
-`sql_text_writes` and `sql_plan_operation_writes` count successful write
-operations against their deduplicated dictionaries. They are not the number of
-currently distinct dictionary rows. Physical storage by source database
+The **Activity Collection Reliability by Database** table uses the selected
+source databases and dashboard end time, but bounds history to the latest six
+hours. Activity status is recorded at the high-frequency activity interval, so
+this diagnostic bound prevents an accidental 30-day repository scan while
+retaining enough history to identify intermittent and persistent offenders.
+
+`sql_text_writes`, `sql_cursor_metadata_writes`, and
+`sql_plan_operation_writes` count successful write candidates against their
+deduplicated dictionaries. They are not the number of currently distinct
+dictionary rows or necessarily physical updates: unchanged cursor metadata is
+not rewritten more than once per UTC day. Physical storage by source database
 remains an estimate: Harry distributes each partition's measured heap and
 index bytes according to its exact per-database row shares, but PostgreSQL
 pages and indexes are shared within that partition.
 
-When Grafana uses a role that was granted access before these tables existed,
-grant access after Harry creates them:
+When Grafana uses a role that was granted access before newer Harry objects
+existed, grant access after Harry creates them:
 
 ```sql
 GRANT SELECT ON harry_repository_daily_ingest TO grafana;
 GRANT SELECT ON harry_runtime_samples TO grafana;
 GRANT SELECT ON harry_latest_runtime_status TO grafana;
+GRANT SELECT ON oracle_sql_cursor_metadata TO grafana;
 ```
 
 For future Harry tables, a database owner can instead configure suitable
@@ -422,6 +448,7 @@ The dashboards assume the scraper is writing these tables:
 
 - `oracle_database_activity_samples`
 - `oracle_sql_samples`
+- `oracle_sql_cursor_metadata`
 - `oracle_sql_texts`
 - `oracle_sql_plans`
 - `oracle_session_samples`

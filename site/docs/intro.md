@@ -73,6 +73,7 @@ The scraper writes to these primary PostgreSQL tables:
 
 - `oracle_metric_samples`
 - `oracle_sql_samples`
+- `oracle_sql_cursor_metadata`
 - `oracle_sql_texts`
 - `oracle_sql_plans`
 - `oracle_session_samples`
@@ -131,4 +132,3 @@ deployments, configuration validation, upgrades, troubleshooting, dashboard
 customization, and analysis of collected Oracle performance data.
 
 [Explore professional support for Harry](https://www.oneclickdba.com/harry/)
-

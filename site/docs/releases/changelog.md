@@ -25,6 +25,36 @@ List of upcoming and historic changes to the scraper.
   root service using a dedicated common monitoring user with
   `CONTAINER_DATA=ALL`. This exposes instance-level `CON_ID = 0` CPU and I/O
   counters while preserving visibility of workloads running in `FREEPDB1`.
+- Add a fleet-wide activity reliability table to the Repository Health
+  dashboard. Rank databases by current state, failures, timeouts, duration,
+  sample volume, and latest error over the selected range, with a six-hour
+  safety bound for the high-frequency scrape-status table.
+- Isolate unavailable Oracle targets with a per-database connection circuit
+  breaker. Treat every failed connectivity probe as a backoff condition,
+  suspend high-frequency activity queries until connectivity recovers, retain
+  fresh failed collector state for dashboards and alerts, and continue
+  collecting healthy databases without requiring operators to remove stopped
+  databases from configuration.
+- Correct SQL consumer ranking for CDB-root collection. Aggregate
+  `GV$SQLSTATS` contributions into one sample per instance, SQL ID, and plan;
+  make Top Consumers and SQL Performance collapse retained duplicate
+  container rows before calculating deltas; and treat decreasing cumulative
+  counters as a new baseline instead of re-adding the complete value. This
+  removes false Oracle-internal top consumers while retaining genuine Oracle
+  and application workload in the same ranking.
+- Make the Repository Health daily dataset-volume panel unstacked and
+  logarithmic. It now exposes relative collector volume and independent
+  changes instead of visually duplicating the stacked source-database total.
+- Show the active Harry scraper and the PostgreSQL endpoint queried by Grafana
+  at the top of the Repository Health dashboard. Include HA scope, heartbeat
+  freshness, primary/replica role, and replica replay delay so a stale Patroni
+  read endpoint is immediately visible.
+- Change the Database Activity History dashboard default time range from 30
+  minutes to three hours. Other dashboards retain their existing defaults.
+- Reorder the Database Activity History dashboard to follow the OEM ASH
+  Analytics visual flow: database CPU and DB time, average active sessions by
+  wait class, SQL activity over time, and then the Top SQL and Top Sessions
+  rankings. All lower panels retain their existing order.
 
 ### 0.3.1, 2026-10-09
 
