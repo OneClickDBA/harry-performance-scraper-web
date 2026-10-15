@@ -63,3 +63,9 @@ DAH shows **when** the workload changed. TOP Consumers shows **what** caused it.
 Same start time. Same workload shape. One dominant SQL. Full scans in red.
 
 **Blanco y en botella.**
+
+## Related engineering note
+
+Read [The missing information: connecting SQL pressure to application
+context](/engineering/sql-application-context) for the collection and storage
+design behind schema, module, and child-cursor details.

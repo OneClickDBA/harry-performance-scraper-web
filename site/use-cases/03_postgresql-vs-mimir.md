@@ -192,3 +192,9 @@ job.
 [explore Harry](https://oneclickdba.com/harry/) or
 [contact OneClickDBA](https://oneclickdba.com/) to discuss an Oracle
 performance monitoring deployment.
+
+## Related engineering note
+
+Read [Building Open-Source Oracle Database Performance History with PostgreSQL
+and Grafana](/engineering/open-source-oracle-performance-history) for the
+design history behind Harry's relational repository.

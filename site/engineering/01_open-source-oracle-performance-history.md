@@ -1,6 +1,7 @@
 ---
 title: "Building Open-Source Oracle Database Performance History with PostgreSQL and Grafana"
-sidebar_position: 4
+sidebar_position: 1
+slug: "open-source-oracle-performance-history"
 description: "How Harry evolved from an Oracle metrics exporter into an open-source performance history platform using PostgreSQL and Grafana, with a focus on historical analysis, shared visibility, alerting and practical DBA-driven design."
 ---
 
@@ -137,3 +138,9 @@ That is how _Harry — Performance Scraper for Oracle Database_ got its name.
     alt="Harry - Performance Scraper for Oracle Database"
   />
 </a>
+
+## Related use case
+
+Read [When Oracle Performance Data Becomes a Cardinality
+Problem](/use-cases/oracle-performance-prometheus-cardinality) for measured
+cardinality results from Harry's relational performance model.

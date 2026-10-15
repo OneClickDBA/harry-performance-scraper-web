@@ -71,6 +71,32 @@ const config: Config = {
             'https://github.com/OneClickDBA/harry-performance-scraper-web/tree/main/site/',
       },
     ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id : 'engineering',
+        path : 'engineering',
+        routeBasePath : 'engineering',
+        sidebarPath : './sidebarsEngineering.ts',
+        editUrl :
+            'https://github.com/OneClickDBA/harry-performance-scraper-web/tree/main/site/',
+      },
+    ],
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects : [
+          {
+            from : '/use-cases/euoc-article',
+            to : '/engineering/open-source-oracle-performance-history',
+          },
+          {
+            from : '/use-cases/the_missing_information',
+            to : '/engineering/sql-application-context',
+          },
+        ],
+      },
+    ],
   ],
 
   themeConfig : {
@@ -100,6 +126,13 @@ const config: Config = {
           docsPluginId : 'useCases',
           position : 'left',
           label : 'Use Cases',
+        },
+        {
+          type : 'docSidebar',
+          sidebarId : 'engineeringSidebar',
+          docsPluginId : 'engineering',
+          position : 'left',
+          label : 'Engineering',
         },
         {
           href : 'https://demo.harryperformance.com',
