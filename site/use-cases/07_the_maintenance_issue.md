@@ -65,20 +65,25 @@ ping may report an Oracle Net error, a refused connection, an unreachable
 network, a driver error, or a context deadline; operationally, the result is the
 same: that database cannot currently be collected.
 
-The failure opens a circuit breaker for that database using the configured
-`metrics.connectionBackoff` period. The circuit is local to the database. It
-does not pause a datacenter, a collector, or the Harry process.
+The failure quarantines that database in Harry's in-memory Dead Connection
+Detection queue. The circuit is local to the database. It does not pause a
+datacenter, a collector, or the Harry process.
 
 ```yaml
 metrics:
   scrapeInterval: 15s
-  connectionBackoff: 5m
+  deadConnectionDetection:
+    enabled: true
+    interval: 5m
+    probeTimeout: 5s
 ```
 
-The default five-minute backoff avoids connection storms during a prolonged
-outage. Environments that prefer faster recovery detection can use a shorter
-period such as `1m`, accepting the corresponding increase in failed connection
-attempts while the target remains unavailable.
+The normal collectors never reconnect quarantined targets. The independent DCD
+scheduler runs at a fixed five-minute interval and checks queued databases
+strictly one at a time. This prevents a datacenter outage from producing a
+burst of simultaneous Oracle connection attempts. Exponential backoff is not
+used: a database can remain unavailable for days and Harry must continue
+checking for its eventual return at a predictable cadence.
 
 ## Suspend expensive work, not monitoring state
 
@@ -110,23 +115,33 @@ fabricated workload data.
 
 ## Automatic recovery
 
-After the backoff expires, the normal scheduled collector tries the Oracle
-connectivity probe again.
+At every DCD interval, Harry takes the current quarantined targets and probes
+them serially. DCD is the only runtime component allowed to rebuild and warm an
+Oracle connection pool.
 
-If the probe still fails, Harry reopens the per-database circuit and continues
-monitoring the healthy estate. If it succeeds, Harry clears the circuit and
-activity collection resumes automatically. No configuration edit, process
-restart, or manual database re-registration is required.
+If a probe still fails, the database remains queued for the next fixed
+interval. If connection initialization and pool warmup succeed, DCD returns the
+database to active collection. No configuration edit, process restart, or
+manual database re-registration is required.
 
-With the default settings, recovery is normally detected within approximately
-five minutes plus one scheduled scrape interval. The first failure can still
-consume its configured timeout because Harry must observe a failure before it
-can isolate the target.
+With the default settings, recovery is normally detected within five minutes.
+The first failure can still consume its configured timeout because Harry must
+observe a failure before it can isolate the target. A very large queue can make
+a serialized DCD cycle exceed five minutes; Harry finishes that pass and never
+overlaps it with another recovery cycle.
 
 Startup follows the same principle. Harry performs a bounded five-second
 connectivity preflight before running database initialization SQL and warming
-the connection pool. An inaccessible target therefore fails early instead of
-consuming several initialization and pool-warmup timeouts.
+the connection pool. An inaccessible target therefore fails early, enters the
+same in-memory DCD queue, and no longer interferes with startup of later
+targets.
+
+This also supports Data Guard configurations without Active Data Guard. A
+mounted physical standby may reject the monitoring login while it remains a
+standby. Harry keeps that configured endpoint quarantined. After a switchover
+or failover opens the database and its configured Clusterware service becomes
+usable, the next serialized DCD pass activates it automatically. Oracle service
+placement remains the DBA's responsibility.
 
 ## Find every affected database at once
 
