@@ -143,12 +143,23 @@ than JSON labels in `oracle_metric_samples`:
 | `oracle_system_counter_samples` | Selected cumulative `GV$SYSSTAT` and `GV$SYS_TIME_MODEL` counters with reset-aware interval deltas |
 | `oracle_wait_class_samples` | Cumulative wait-class time and reset-aware interval deltas |
 | `oracle_system_metric_samples` | Selected bounded `GV$CON_SYSMETRIC` values |
+| `oracle_dataguard_destination_samples` | Automatically detected redo transport destinations, configuration, synchronization, gap, and error state |
+| `oracle_dataguard_lag_samples` | Standby transport/apply lag and source-datum freshness |
+| `oracle_dataguard_process_samples` | Physical standby managed recovery and redo transport process state |
 | `oracle_scrape_status` | Connectivity and collector success, duration, row count, and errors |
 | `oracle_latest_scrape_status` | Current result per database and collector, maintained transactionally for dashboards and alerts |
+| `harry_database_connection_state` | Current active, quarantined, or probing state plus DCD failure, attempt, duration, and recovery metadata |
 
 The scraper keeps in-memory baselines for cumulative counters. The first sample
 after startup has no delta. A lower subsequent value is marked as a counter
 reset instead of producing a negative rate.
+
+Data Guard monitoring has no separate configuration switch. Each operational
+cycle performs a small membership query. Standalone databases skip the Data
+Guard detail queries and write no Data Guard dataset rows. Detected primaries
+collect destination health; configured and reachable standby services also
+collect lag and recovery process state. Harry does not discover connection
+descriptors or credentials for an unconfigured standby.
 
 The instance-level CPU and I/O collector stores `DB CPU`, `DB time`, physical
 read/write request counts, and physical read/write byte counts with
@@ -178,13 +189,14 @@ PostgreSQL replicas and prevents stale capacity data from appearing current.
 Harry records scheduler and repository timing without issuing any additional
 queries against Oracle Database. The existing `oracle_scrape_status` history
 continues to identify the duration and result of each collector for each Oracle
-database. Two Harry-level tables describe the complete activity and scheduled
-cycles:
+database. Three Harry-level tables describe scheduler cycles and current
+connection recovery state:
 
 | PostgreSQL table | Collected data |
 | --- | --- |
 | `harry_runtime_samples` | Partitioned cycle history: scheduling lag, Oracle collection duration, PostgreSQL repository duration, total duration, missed intervals, completed databases, samples, and errors |
 | `harry_latest_runtime_status` | Latest cycle per HA scope and scheduler, maintained for dashboards and alerts |
+| `harry_database_connection_state` | One current row per configured Oracle target; this is not retained event history |
 
 `collection_duration_seconds` covers the concurrent Oracle collection phase.
 `postgresql_write_duration_seconds` covers the complete repository phase,
@@ -192,6 +204,15 @@ including pool wait, partition checks, sample and latest-state writes, commit,
 and any ingest-accounting or retention work performed before the scheduler can
 continue. `total_duration_seconds` starts at the planned scheduler time, so it
 also includes scheduling delay.
+
+Dead Connection Detection is represented as its own scheduler in both runtime
+tables. When an active connectivity check fails, Harry quarantines that target
+and normal collectors stop using it. The fixed-interval DCD scheduler probes
+queued targets strictly one at a time, records every attempt in
+`oracle_scrape_status`, and returns a target to active collection only after
+connection initialization and pool warmup succeed. The current-state table is
+upserted transactionally and removes databases no longer present in the active
+configuration.
 
 Runtime records are completed only after the PostgreSQL phase ends. Harry
 buffers them in memory for up to one minute and writes the batch with a normal
@@ -202,12 +223,12 @@ that already committed. After a PostgreSQL write failure, bounded buffered
 runtime records are written when the repository recovers; a complete repository
 outage still requires an independent availability check.
 
-At the default `2s` activity and `15s` scheduled intervals, one active Harry HA
-scope produces approximately 48,960 narrow runtime rows per day regardless of
-the number of monitored Oracle databases. The global retention setting applies
-to `harry_runtime_samples`. Harry observes and reports pressure but does not
-automatically throttle or change collection intervals: incident periods are
-when complete diagnostic data is most valuable.
+At the default `2s` activity, `15s` scheduled, and `5m` DCD intervals, one
+active Harry HA scope produces approximately 49,248 narrow runtime rows per day
+regardless of the number of monitored Oracle databases. The global retention
+setting applies to `harry_runtime_samples`. Harry observes and reports pressure
+but does not automatically throttle or change collection intervals: incident
+periods are when complete diagnostic data is most valuable.
 
 ## Repository Ingestion Accounting
 

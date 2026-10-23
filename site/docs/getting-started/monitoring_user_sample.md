@@ -76,6 +76,14 @@ GRANT SELECT ON sys.gv_$sysstat TO monitoring_user;
 GRANT SELECT ON sys.gv_$sys_time_model TO monitoring_user;
 GRANT SELECT ON sys.gv_$system_wait_class TO monitoring_user;
 GRANT SELECT ON sys.product_component_version TO monitoring_user;
+
+-- Automatic Data Guard detection and monitoring
+GRANT SELECT ON sys.v_$database TO monitoring_user;
+GRANT SELECT ON sys.v_$archive_dest TO monitoring_user;
+GRANT SELECT ON sys.gv_$archive_dest TO monitoring_user;
+GRANT SELECT ON sys.gv_$archive_dest_status TO monitoring_user;
+GRANT SELECT ON sys.v_$dataguard_stats TO monitoring_user;
+GRANT SELECT ON sys.gv_$dataguard_process TO monitoring_user;
 ```
 
 The operational grants cover database and instance state, session and process
@@ -84,6 +92,19 @@ usage and allocation, ASM capacity, cumulative CPU/I/O and system counters,
 observed SGA/PGA allocation, database product/version identity, wait classes,
 and bounded system metrics. They are required when the default
 `operational.enabled: true` setting is used.
+
+Data Guard collection is automatic and uses the same operational interval. A
+standalone database only runs a small discovery query and produces no Data
+Guard rows. A primary with configured standby destinations exposes transport
+configuration and destination health. A reachable physical standby also
+exposes transport/apply lag and managed recovery process state.
+
+Harry can only query database services present in its configuration and
+reachable with the configured credentials. It does not discover standby
+connect descriptors or credentials. A mounted standby that rejects the
+configured login with `ORA-01033` cannot provide standby-side lag or recovery
+process data; primary-side destination health remains available from a
+configured primary database.
 
 To collect alert logs, also grant:
 

@@ -27,7 +27,10 @@ databases:
 
 metrics:
   scrapeInterval: 15s
-  connectionBackoff: 5m
+  deadConnectionDetection:
+    enabled: true
+    interval: 5m
+    probeTimeout: 5s
 
 operational:
   enabled: true
@@ -101,7 +104,10 @@ The scraper may also load database credentials from [OCI Vault](./oci-vault.md),
 ```yaml
 metrics:
   scrapeInterval: 15s
-  connectionBackoff: 5m
+  deadConnectionDetection:
+    enabled: true
+    interval: 5m
+    probeTimeout: 5s
   definitions:
     - /etc/harry/application-capacity-metrics.toml
     - /etc/harry/application-metrics.toml
@@ -109,13 +115,12 @@ metrics:
 
 - `scrapeInterval`: How often the scraper collects Oracle data and writes to
   PostgreSQL. Configure this for continuous collection.
-- `connectionBackoff`: How long to wait before retrying an unavailable or
-  invalid database connection. Defaults to `5m`. A failed connectivity probe
-  opens a per-database circuit breaker: Harry keeps the database in collector
-  status as failed, stops issuing activity queries to that target, and
-  continues collecting every healthy database. Activity collection resumes
-  automatically after a scheduled connectivity probe succeeds; removing a
-  temporarily unavailable database from the configuration is not required.
+- `deadConnectionDetection.enabled`: Enables the independent connection
+  recovery scheduler. Defaults to `true`.
+- `deadConnectionDetection.interval`: Fixed interval between serialized DCD
+  recovery passes. Defaults to `5m`; exponential backoff is not used.
+- `deadConnectionDetection.probeTimeout`: Timeout applied to each connection
+  probe and pool-warmup operation. Defaults to `5s`.
 - `definitions`: Optional ordered list of TOML or YAML files containing
   additional SQL-derived metrics. Later files override duplicate generated
   metric identifiers from earlier files. If omitted, native operational and
@@ -127,9 +132,21 @@ Additional metric definitions are stored in `oracle_metric_samples`. Native
 operational and performance collectors write to dedicated typed tables
 regardless of whether `definitions` is configured.
 
+When an active target fails its connectivity check, Harry moves it to an
+in-memory DCD queue and excludes it from normal activity, performance, and
+operational collection. DCD is the only component allowed to reconnect. Every
+five minutes it probes queued databases strictly one at a time; successful
+targets return to normal collection, while failed targets remain queued. The
+queue is reconstructed from configured databases whenever Harry starts or HA
+leadership changes.
+
 The removed pre-beta keys `default` and `custom` are rejected by strict YAML
 parsing. See [Additional Metrics](./additional-metrics.md) for migration and
 cardinality guidance.
+
+The former `metrics.connectionBackoff` key was replaced in `0.5.0` by
+`metrics.deadConnectionDetection`. Remove the old key because strict YAML
+parsing rejects it.
 
 ## Native Operational Configuration
 
@@ -145,6 +162,12 @@ operational:
   `1m`.
 - `queryTimeout`: Timeout applied independently to each operational-domain
   query. Defaults to `10s`.
+
+The same interval automatically detects Data Guard membership. No per-database
+Data Guard setting is required. Standalone databases skip the detail queries;
+detected primaries collect destination health, and configured reachable
+standbys also collect lag and managed recovery state. Harry does not infer an
+unconfigured standby service or its credentials.
 
 One domain failing does not discard rows returned by other domains. Every
 domain writes success, duration, sample count, and a bounded error message to

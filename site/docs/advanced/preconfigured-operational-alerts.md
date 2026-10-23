@@ -15,7 +15,8 @@ The rules evaluate PostgreSQL tables and views created by the scraper. Oracle
 state rules run once per minute in the `Oracle operational alerts` group.
 Repository-ingestion rules run every five minutes in the
 `Harry repository ingestion alerts` group. Runtime-pressure rules run every
-minute in the `Harry runtime pressure alerts` group. A rule creates one alert
+minute in the `Harry runtime pressure alerts` group. Data Guard rules run every
+minute in the `Oracle Data Guard alerts` group. A rule creates one alert
 instance
 for each returned Oracle database, tablespace, resource, or ASM diskgroup.
 
@@ -32,6 +33,9 @@ and notification requirements before treating them as production policy.
 | Oracle tablespace usage is high | Tablespace usage is greater than 90% | 5 minutes | Warning |
 | Oracle resource limit usage is high | A finite Oracle resource limit is greater than 85% utilized | 5 minutes | Warning |
 | Oracle ASM diskgroup usage is high | ASM diskgroup usage is greater than 90% | 5 minutes | Warning |
+| Oracle Data Guard destination is unhealthy | Destination reports an error or archive gap | 2 minutes | Critical |
+| Oracle Data Guard lag or telemetry age is high | Transport lag, apply lag, or datum age exceeds 15 minutes | 5 minutes | Warning |
+| Oracle Data Guard managed recovery is stopped | No MRP process is visible on a monitored physical standby | 2 minutes | Critical |
 | Oracle activity collection is approaching its timeout | Latest activity query uses more than 80% of its configured timeout | 5 minutes | Warning |
 | Harry scheduler cycle is approaching its interval | Total cycle duration uses more than 80% of its configured interval | 5 minutes | Warning |
 | Harry PostgreSQL write is consuming too much of the scrape interval | Repository phase uses more than 50% of its configured interval | 5 minutes | Warning |
@@ -148,6 +152,39 @@ select *
 from oracle_latest_asm_diskgroup_samples
 where used_percent > 90
 order by used_percent desc;
+```
+
+## Oracle Data Guard Alerts
+
+Data Guard alerts are created only when automatic discovery produces Data
+Guard rows. Their `NoData` state is `OK`, so standalone databases do not create
+false alerts.
+
+**Oracle Data Guard destination is unhealthy** reports archive destination
+errors and archive gaps from the latest destination sample. Inspect
+`status`, `error_message`, `gap_status`, transport mode, and the remote database
+name in **Data Guard Destinations and Configuration**. Validate listener and
+service reachability, archive destination parameters, password files, redo
+transport authentication, and missing archive logs.
+
+**Oracle Data Guard lag or telemetry age is high** uses the greatest of
+transport lag, apply lag, and source datum age. The default threshold is 900
+seconds. Datum age is included because an unchanged old datum can otherwise
+make a stale lag value appear healthy. Review redo generation, transport
+throughput, archive gaps, standby I/O, and managed recovery.
+
+**Oracle Data Guard managed recovery is stopped** reports a reachable physical
+standby where no MRP process is visible. Confirm that apply was not stopped for
+planned maintenance before starting managed recovery. A standby that rejects
+Harry's configured connection, including one returning `ORA-01033`, is covered
+by the existing connectivity alert rather than this rule.
+
+Inspect the current repository state with:
+
+```sql
+select * from oracle_latest_dataguard_destination_samples;
+select * from oracle_latest_dataguard_lag_samples;
+select * from oracle_latest_dataguard_process_samples;
 ```
 
 ## Runtime Pressure Alerts

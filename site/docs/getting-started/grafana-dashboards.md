@@ -77,6 +77,8 @@ Purpose:
 
 - Collector success, freshness, duration, and errors.
 - Per-database collector-duration trends and activity query timeout utilization.
+- Current active/quarantined connection state and serialized DCD recovery-cycle
+  duration and outcomes for the selected database.
 - Stable database identity, Oracle product/version, database role, Data Guard
   protection, and instance state.
 - Session and process utilization.
@@ -85,6 +87,10 @@ Purpose:
 - Oracle resource-limit pressure.
 - Reset-aware CPU and database-time demand, SQL and transaction rates, block
   activity, IOPS, I/O throughput, redo generation, and wait-class rates.
+- Automatically detected Data Guard destination health, transport/apply lag,
+  telemetry freshness, and managed recovery process state in a collapsible
+  section. Standby-side panels require a configured and reachable standby
+  database service.
 
 Primary tables:
 
@@ -96,6 +102,11 @@ oracle_tablespace_samples
 oracle_asm_diskgroup_samples
 oracle_system_counter_samples
 oracle_wait_class_samples
+oracle_dataguard_destination_samples
+oracle_dataguard_lag_samples
+oracle_dataguard_process_samples
+harry_database_connection_state
+harry_runtime_samples
 oracle_scrape_status
 oracle_latest_scrape_status
 harry_latest_runtime_status
@@ -127,6 +138,8 @@ Purpose:
 - Recent activity samples.
 - Top wait events.
 - Module/program activity.
+- SQL-ID drilldowns to Oracle SQL Top Consumers for detailed workload, SQL
+  text, and execution-plan analysis.
 
 Primary tables:
 
@@ -235,10 +248,15 @@ docker-compose/grafana/dashboards/oracle-sessions-and-blocking.json
 
 Purpose:
 
+- Current blocking impact summary and RAC-aware blocking-chain graph.
+- Historical blocker-to-waiter timeline for the selected Grafana time range.
+- Root, intermediate, and blocked-session identification with wait-event and
+  application context.
+- Current blocking-session details anchored to the latest scheduled
+  collection.
 - Current active SQL sessions.
-- Current waiters by event.
-- Long-running active sessions.
-- Blocking sessions.
+- Visual grouping of current non-idle waiters by event.
+- Active sessions ordered by current wait duration.
 - Session inventory by user, module, and program.
 
 Primary tables:
@@ -246,10 +264,45 @@ Primary tables:
 ```text
 oracle_session_samples
 oracle_blocking_session_samples
+oracle_scrape_status
 ```
 
-This dashboard is the current-state triage view. Historical active-session
-graphs live in the DAH dashboard instead.
+This dashboard is the current-state triage view. Red graph nodes are root
+blockers, orange nodes are blocked sessions that also block other sessions,
+and yellow nodes are blocked leaf sessions. Node identity includes Oracle
+instance and SID so RAC relationships remain unambiguous. The graph uses
+enlarged nodes in a compact panel; use its zoom controls when a blocking chain
+contains many sessions.
+
+The blocking timeline reconstructs contiguous incidents from Harry's sampled
+`GV$SESSION` blocking observations and shows the 20 most-observed RAC-aware
+blocker-to-waiter and wait-event relationships. Colors identify Application,
+Concurrency, Cluster, Configuration/Administrative, and other wait classes.
+A green `No Locks detected` band means the selected window contains
+successful scheduled collections but no blocking rows. A grey `No successful
+collection data` band distinguishes missing collection evidence from a
+confirmed lock-free window. The panel displays eight relationships per page
+so labels and state text remain readable when many lock chains are present.
+
+:::warning Sampled blocking history
+
+This timeline is not an exact Oracle lock audit. Locks shorter than
+`metrics.scrapeInterval` can be missed, incident boundaries are approximate to
+the scheduled collection interval, and failed or missing collections appear as
+gaps. Harry records `GV$SESSION` blocking relationships; it does not collect
+the complete `GV$LOCK` inventory. Use Oracle diagnostic queries when exact
+lock acquisition and release details are required.
+
+:::
+
+The current-state panels are anchored to the exact timestamp of the latest
+scheduled collection inside the selected Grafana range. When blocking or user
+sessions disappear, Harry displays the latest snapshot as empty instead of
+falling back to older retained rows. `Wait s` is the duration of the session's
+current wait, not SQL execution elapsed time. Historical active-session graphs
+live in the DAH dashboard instead. The session inventory groups by status,
+user, module, program, and origin machine so application-server session
+distribution can be compared directly.
 
 [![Current Sessions and Blocking dashboard showing active sessions, waiters, blockers, and session inventory](/img/screenshots/sessions_and_blocking.png)](/img/screenshots/sessions_and_blocking.png)
 
@@ -276,9 +329,12 @@ Purpose:
 - Current collector freshness, result counts, and collection errors.
 - Scheduler lag, Oracle collection duration, PostgreSQL repository duration,
   total cycle pressure, missed intervals, and database completion counts.
-- Per-database activity attempts, failures, timeouts, duration, sample volume,
-  and latest error so an unhealthy database can be isolated from aggregate
-  activity-cycle pressure.
+- Per-database current connection state, current activity health, and selected-
+  window attempts, failures, timeouts, duration, sample volume, and last
+  failure so an unhealthy or recently recovered database can be isolated from
+  aggregate activity-cycle pressure.
+- Fleet-wide Dead Connection Detection queue size, per-target quarantine and
+  recovery state, probe attempts, duration, and latest failure.
 - PostgreSQL cache efficiency, workload counters, table maintenance, dead rows,
   sessions, long-running queries, and lock waits.
 - Current Grafana repository sessions and optional historical ranking of reads
@@ -305,11 +361,22 @@ does not use the measurements to throttle collection. Runtime trend panels use
 the Grafana dashboard time range and adapt their PostgreSQL aggregation bucket
 to Grafana's calculated interval.
 
-The **Activity Collection Reliability by Database** table uses the selected
-source databases and dashboard end time, but bounds history to the latest six
-hours. Activity status is recorded at the high-frequency activity interval, so
-this diagnostic bound prevents an accidental 30-day repository scan while
-retaining enough history to identify intermittent and persistent offenders.
+The **Dead Connection Detection** section reads the small
+`harry_database_connection_state` table. It shows every configured target's
+current state and keeps unavailable databases visible while DCD retries them
+serially. Probe-cycle duration and outcomes are also available as the
+`dead_connection_detection` scheduler in runtime telemetry.
+
+The **Activity Collection Reliability by Database (Selected Window)** table
+uses the selected source databases and dashboard end time, but bounds history
+to the latest six hours. `connection_state` is the current canonical DCD state,
+while `activity_state` distinguishes current failure or suspension from a
+`RECOVERED` database whose latest collection succeeded after failures in the
+selected window. Attempts, failure percentage, and `last_failure_error` remain
+window statistics. Startup and connection-suspension cycles remain included
+because they represent missed activity collection. This diagnostic bound
+prevents an accidental 30-day repository scan while retaining enough history
+to identify intermittent and persistent offenders.
 
 `sql_text_writes`, `sql_cursor_metadata_writes`, and
 `sql_plan_operation_writes` count successful write candidates against their
@@ -328,6 +395,12 @@ GRANT SELECT ON harry_repository_daily_ingest TO grafana;
 GRANT SELECT ON harry_runtime_samples TO grafana;
 GRANT SELECT ON harry_latest_runtime_status TO grafana;
 GRANT SELECT ON oracle_sql_cursor_metadata TO grafana;
+GRANT SELECT ON oracle_dataguard_destination_samples TO grafana;
+GRANT SELECT ON oracle_dataguard_lag_samples TO grafana;
+GRANT SELECT ON oracle_dataguard_process_samples TO grafana;
+GRANT SELECT ON oracle_latest_dataguard_destination_samples TO grafana;
+GRANT SELECT ON oracle_latest_dataguard_lag_samples TO grafana;
+GRANT SELECT ON oracle_latest_dataguard_process_samples TO grafana;
 ```
 
 For future Harry tables, a database owner can instead configure suitable

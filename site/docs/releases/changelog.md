@@ -7,14 +7,63 @@ sidebar_position: 2
 
 List of upcoming and historic changes to the scraper.
 
-### Next, TBD
+### 0.5.0, 2026-10-21
 
+- Add independent Dead Connection Detection. Quarantine unavailable Oracle
+  targets in a deduplicated in-memory queue, remove all reconnect work from
+  normal collectors, and retry queued databases strictly one at a time on a
+  fixed five-minute interval. Persist current connection state, probe history,
+  recovery timing, and DCD scheduler pressure for the Operational Overview and
+  Repository Health dashboards. This also allows configured physical standby
+  services without Active Data Guard to join collection automatically after a
+  switchover or failover makes them usable.
+
+- Separate current DCD connection state, current activity health, and selected-
+  window reliability in Repository Health. Databases that are currently active
+  after an earlier failure now show `RECOVERED` instead of the ambiguous
+  `DEGRADED`, while startup and suspended cycles remain visible in the failure
+  totals.
+
+- Add automatic Data Guard monitoring to the one-minute operational collector.
+  Detect configured Data Guard membership without per-database configuration,
+  retain destination health, standby lag/freshness, and managed recovery state
+  in dedicated partitioned datasets, and expose the information in a
+  collapsible Operational Overview section. Standalone databases only perform
+  the discovery query; standby-side telemetry requires a configured, reachable
+  standby service.
+
+- Add origin machine to the Current Sessions and Blocking session inventory,
+  grouping session counts by user, module, program, and machine so imbalanced
+  application-server connection distribution is visible.
+- Enlarge session nodes and reduce unused vertical space in the Current
+  Blocking Chains graph, keeping complex chains navigable with Grafana's zoom
+  controls.
+- Add a sampled blocker-to-waiter State timeline to Current Sessions and
+  Blocking. Reconstruct contiguous incidents from scheduled collections,
+  preserve collection gaps, classify regions by wait class, and cap the panel
+  at the 20 most-observed relationships without adding Oracle collection or
+  PostgreSQL storage. Empty windows distinguish successful lock-free
+  collections from windows with no successful collection data. Fixed
+  wait-class colors and eight-row pagination keep lock chains visually stable
+  and readable.
+- Add Oracle SQL Top Consumers drilldowns to every SQL-ID surface in the DAH
+  dashboard. Links preserve the selected source database and dashboard time
+  range, including SQL-ID links from the activity time series.
 - Consolidate the Oracle SQL Performance overview into Oracle SQL Top
   Consumers. Add a compact `Rank SQL by` selector for elapsed time, CPU time,
   User I/O wait, executions, buffer gets, disk reads, and elapsed time per
   execution; apply the selected ranking before the Top 20 limit; retain SQL
   efficiency indicators in the existing table; and retire the duplicate
   provisioned dashboard without increasing dashboard height.
+- Reorganize Oracle Operational Overview so database identity, instance state,
+  and memory allocation share a compact top row. Move collector status,
+  collector duration, and activity timeout pressure into a dedicated
+  collapsible collection-information section at the bottom of the dashboard.
+- Add a current blocking-impact summary and RAC-aware blocker-to-waiter Node
+  Graph to Current Sessions and Blocking. Replace the wait-event table with a
+  visual gauge, clarify that wait duration is not SQL execution time, and
+  anchor every current-state panel to the latest scheduled collection so an
+  empty snapshot cannot display stale retained sessions or blockers.
 
 ### 0.4.0, 2026-10-16
 

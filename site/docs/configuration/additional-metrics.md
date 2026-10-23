@@ -23,7 +23,6 @@ List TOML or YAML files under `metrics.definitions`:
 ```yaml
 metrics:
   scrapeInterval: 15s
-  connectionBackoff: 5m
   definitions:
     - /etc/harry/application-metrics.toml
 ```

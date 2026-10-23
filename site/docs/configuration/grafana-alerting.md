@@ -107,6 +107,9 @@ access to `harry_repository_daily_ingest`:
 GRANT SELECT ON harry_repository_daily_ingest TO grafana;
 GRANT SELECT ON harry_runtime_samples TO grafana;
 GRANT SELECT ON harry_latest_runtime_status TO grafana;
+GRANT SELECT ON oracle_latest_dataguard_destination_samples TO grafana;
+GRANT SELECT ON oracle_latest_dataguard_lag_samples TO grafana;
+GRANT SELECT ON oracle_latest_dataguard_process_samples TO grafana;
 ```
 
 Do not give the Grafana datasource account schema ownership or write

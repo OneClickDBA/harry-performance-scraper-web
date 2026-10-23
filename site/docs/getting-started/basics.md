@@ -50,6 +50,12 @@ grant select on sys.gv_$sql to scraperuser;
 grant select on sys.gv_$sqlstats to scraperuser;
 grant select on sys.gv_$sql_plan to scraperuser;
 grant select on sys.gv_$con_sysmetric to scraperuser;
+grant select on sys.v_$database to scraperuser;
+grant select on sys.v_$archive_dest to scraperuser;
+grant select on sys.gv_$archive_dest to scraperuser;
+grant select on sys.gv_$archive_dest_status to scraperuser;
+grant select on sys.v_$dataguard_stats to scraperuser;
+grant select on sys.gv_$dataguard_process to scraperuser;
 grant select on sys.v_$diag_alert_ext to scraperuser; -- for alert logs only
 ```
 
