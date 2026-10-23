@@ -21,7 +21,8 @@ Harry 0.5.0 introduced **Dead Connection Detection**, or **DCD**, to make
 database availability an explicit state rather than an accidental side effect
 of every collector.
 
-:::note 
+:::note   
+
 The name
 
 Dead Connection Detection is the name I am proud to give this feature. It says
@@ -30,31 +31,30 @@ the visual concept unavoidable (you'll notice at the end of this article).
 
 :::
 
-# The history behind
+## The history behind
 
-After facing a datacenter _[maintenance](/use-cases/the_maintenance_issue)_ tasks and while implementing the new DataGuard monitoring.  
-I consider that the way Harry handle connection and re-connection issues was not the best one.  
+DCD grew from [a real datacenter maintenance
+incident](/use-cases/the_maintenance_issue). All Oracle nodes in one datacenter
+were deliberately stopped, but attempts to reach them began interfering with
+collection from healthy targets elsewhere. The use case describes the incident
+and explains why temporarily removing the unavailable databases from Harry's
+configuration was not an acceptable solution.
 
+:::note   
 
-The design came from a real maintenance event. Every Oracle node in one
-datacenter was stopped, while databases in the other datacenters remained
-available. Harry still had every target in its configuration, as it should, but
-the normal activity and scheduled collectors continued encountering connection
-failures.
+What triggered the design
 
-The unavailable databases created three related problems:
+The idea for DCD took shape while I was developing Data Guard monitoring. A
+configured physical standby may be temporarily inaccessible to Harry,
+particularly without Active Data Guard, and can later become the active
+database after a switchover or failover. Working through that lifecycle made me
+realize that Harry's handling of connection failures and recovery was not
+robust enough.
 
-- a two-second activity collector could repeatedly encounter the same dead
-  network path;
-- connection recovery competed with normal collection work;
-- a cycle that waited for many failed targets could delay results from healthy
-  databases.
+That realization led me to design DCD as a dedicated mechanism for isolating
+unavailable databases and returning them to normal collection after recovery.
 
-Editing the configuration to remove databases under maintenance made the
-symptom disappear, but it was operationally wrong. Monitoring configuration
-should describe what must be monitored, not what happens to be available at
-this moment. It would also require another manual edit when the datacenter
-returned.
+:::
 
 ## Separate detection, isolation, and recovery
 
@@ -281,6 +281,8 @@ The feature is serious because monitoring software is most valuable during
 failure. The name is memorable because engineering does not have to be
 anonymous. When a dead connection returns to active collection, Zombie Harry
 has done his job.
+
+![Zombie Harry, the Dead Connection Detection mascot](/img/engineering/dead-connection-detection/harry-zombie.png)
 
 ## References
 
