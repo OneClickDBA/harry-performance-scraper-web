@@ -7,7 +7,7 @@ sidebar_position: 2
 
 List of upcoming and historic changes to the scraper.
 
-### 0.5.0, 2026-10-21
+### 0.5.0, 2026-10-26
 
 - Add independent Dead Connection Detection. Quarantine unavailable Oracle
   targets in a deduplicated in-memory queue, remove all reconnect work from
