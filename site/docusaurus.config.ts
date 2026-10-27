@@ -147,10 +147,10 @@ const config: Config = {
           className : 'navbar-github-button',
         },
         {
-          to : '/docs/intro',
-          label : 'Read the documentation',
+          to : '/sponsor',
+          label : 'Support Harry',
           position : 'right',
-          className : 'navbar-docs-button',
+          className : 'navbar-sponsor-button',
         },
       ],
     },
@@ -183,6 +183,10 @@ const config: Config = {
         {
           title : 'More',
           items : [
+            {
+              label : 'Support Harry',
+              to : '/sponsor',
+            },
             {
               label : 'Professional support',
               href : 'https://www.oneclickdba.com/harry/',

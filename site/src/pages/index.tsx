@@ -4,7 +4,14 @@ import Link from '@docusaurus/Link';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
-import {ArrowRight, BookOpen, Check, Code2, MonitorPlay} from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  Check,
+  Code2,
+  HeartHandshake,
+  MonitorPlay,
+} from 'lucide-react';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 
 import styles from './index.module.css';
@@ -216,6 +223,29 @@ function DocumentationCta() {
   );
 }
 
+function SponsorCta() {
+  return (
+    <section className={styles.supportSection}>
+      <div className={clsx('container', styles.supportContainer)}>
+        <span className={styles.supportIcon} aria-hidden="true">
+          <HeartHandshake size={30} />
+        </span>
+        <div className={styles.supportCopy}>
+          <Heading as="h2">Support independent development</Heading>
+          <p>
+            Donations, sponsored features, testing, and contributions help
+            Harry continue to grow as an open-source project.
+          </p>
+        </div>
+        <Link className={styles.supportButton} to="/sponsor">
+          See ways to support Harry
+          <ArrowRight size={18} aria-hidden="true" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export default function Home(): ReactNode {
   return (
     <Layout
@@ -225,6 +255,7 @@ export default function Home(): ReactNode {
       <main>
         <ArchitectureDiagram />
         <HomepageFeatures />
+        <SponsorCta />
         <DocumentationCta />
       </main>
     </Layout>

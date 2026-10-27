@@ -50,7 +50,7 @@
 }
 
 .navbar-github-button,
-.navbar-docs-button,
+.navbar-sponsor-button,
 .navbar-demo-button {
   min-height: 38px;
   margin-left: 0.5rem;
@@ -74,13 +74,13 @@
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.navbar-docs-button {
+.navbar-sponsor-button {
   border: 1px solid #fff;
   background: #fff;
   color: #20242a;
 }
 
-.navbar-docs-button:hover {
+.navbar-sponsor-button:hover {
   background: #f0f1f2;
   color: #20242a;
 }
@@ -131,7 +131,7 @@
   }
 
   .navbar-sidebar .navbar-github-button,
-  .navbar-sidebar .navbar-docs-button,
+  .navbar-sidebar .navbar-sponsor-button,
   .navbar-sidebar .navbar-demo-button {
     margin: 0;
     border: 0;
