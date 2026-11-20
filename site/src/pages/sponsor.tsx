@@ -35,10 +35,10 @@ export default function Sponsor(): ReactNode {
             <div className={styles.heroActions}>
               <a
                 className={styles.primaryButton}
-                href="https://liberapay.com/Harry-Performance/"
+                href="https://ko-fi.com/harryperformance"
                 target="_blank"
                 rel="noopener noreferrer">
-                Support Harry on Liberapay
+                Support Harry on Ko-fi
                 <ExternalLink size={17} aria-hidden="true" />
               </a>
               <a className={styles.secondaryButton} href="#ways-to-support">
@@ -68,7 +68,7 @@ export default function Sponsor(): ReactNode {
                 </span>
                 <Heading as="h3">Support ongoing development</Heading>
                 <p>
-                  Liberapay contributions support Harry as a whole, including
+                  Ko-fi contributions support Harry as a whole, including
                   development, maintenance, testing, documentation, releases,
                   dashboards, and public project resources.
                 </p>
@@ -78,10 +78,10 @@ export default function Sponsor(): ReactNode {
                 </p>
                 <a
                   className={styles.cardAction}
-                  href="https://liberapay.com/Harry-Performance/"
+                  href="https://ko-fi.com/harryperformance"
                   target="_blank"
                   rel="noopener noreferrer">
-                  Support through Liberapay
+                  Support through Ko-fi
                   <ExternalLink size={16} aria-hidden="true" />
                 </a>
               </article>
@@ -136,7 +136,7 @@ export default function Sponsor(): ReactNode {
             </div>
 
             <p className={styles.paymentNote}>
-              Donations are processed by Liberapay. Harry does not collect or
+              Donations are processed by Ko-fi. Harry does not collect or
               store payment-card information on this website.
             </p>
           </div>

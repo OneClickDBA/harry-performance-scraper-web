@@ -9,6 +9,9 @@ List of upcoming and historic changes to the scraper.
 
 ### 0.5.0, 2026-10-26
 
+- Fix the DAH `Top SQL_ID Activity Over Time` drilldown so it passes the
+  selected SQL ID to Top Consumers instead of Grafana's query-frame name.
+
 - Add independent Dead Connection Detection. Quarantine unavailable Oracle
   targets in a deduplicated in-memory queue, remove all reconnect work from
   normal collectors, and retry queued databases strictly one at a time on a
